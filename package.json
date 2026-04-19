@@ -1,0 +1,59 @@
+{
+  "name": "pact-cc",
+  "version": "1.0.0",
+  "description": "Semantic compression middleware for Claude Code agents. 35x token reduction on long agentic sessions.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "pact-cc": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "pact-engine.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test:engine": "node --experimental-vm-modules --test src/engine.test.ts",
+    "test": "node --experimental-vm-modules --test src/**/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "benchmark": "node dist/cli.js benchmark"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "context-compression",
+    "llm",
+    "agent",
+    "pact",
+    "tokens"
+  ],
+  "author": "Aiden Hecker",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aidenharris/pact-cc"
+  }
+}

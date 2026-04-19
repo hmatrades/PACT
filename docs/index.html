@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pact-cc — Semantic compression middleware for Claude Code</title>
+<meta name="description" content="Semantic compression middleware for Claude Code agents. 6-35x token reduction with less than 2pp completion delta. One command to install.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --bg: #0d1117;
+    --bg-elev: #161b22;
+    --bg-code: #010409;
+    --border: #30363d;
+    --border-muted: #21262d;
+    --fg: #f0f6fc;
+    --fg-muted: #8b949e;
+    --fg-dim: #6e7681;
+    --accent: #3fb950;
+    --accent-dim: #2ea043;
+    --amber: #d29922;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ─── Top bar ─── */
+  .topbar {
+    border-bottom: 1px solid var(--border-muted);
+    padding: 14px 0;
+    font-size: 13px;
+    color: var(--fg-muted);
+  }
+  .topbar .wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .topbar .brand {
+    color: var(--fg);
+    font-weight: 600;
+  }
+  .topbar .brand::before {
+    content: "● ";
+    color: var(--accent);
+  }
+  .topbar nav a {
+    margin-left: 18px;
+    color: var(--fg-muted);
+  }
+  .topbar nav a:hover { color: var(--fg); text-decoration: none; }
+
+  /* ─── Hero ─── */
+  .hero {
+    padding: 80px 0 60px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-muted);
+  }
+  .hero h1 {
+    font-size: 48px;
+    margin: 0 0 8px;
+    font-weight: 700;
+    letter-spacing: -1px;
+  }
+  .hero .rule {
+    color: var(--fg-dim);
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+  .hero .tagline {
+    font-size: 18px;
+    color: var(--fg);
+    margin: 0 0 6px;
+  }
+  .hero .sub {
+    font-size: 15px;
+    color: var(--fg-muted);
+    margin: 0 0 40px;
+  }
+  .hero .install {
+    display: inline-block;
+    padding: 16px 28px;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 18px;
+    color: var(--accent);
+    user-select: all;
+    cursor: text;
+  }
+  .hero .install::before {
+    content: "$ ";
+    color: var(--fg-dim);
+  }
+
+  /* ─── Sections ─── */
+  section {
+    padding: 56px 0;
+    border-bottom: 1px solid var(--border-muted);
+  }
+  section h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--fg-dim);
+    margin: 0 0 20px;
+    font-weight: 600;
+  }
+  section h2::before {
+    content: "// ";
+    color: var(--accent);
+  }
+  section p {
+    margin: 0 0 14px;
+    color: var(--fg);
+  }
+  section p.dim { color: var(--fg-muted); }
+
+  /* ─── Code blocks ─── */
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--fg);
+    margin: 0 0 16px;
+  }
+  code {
+    font-family: inherit;
+    color: var(--accent);
+  }
+  pre code { color: inherit; }
+  .ascii {
+    color: var(--fg-muted);
+    white-space: pre;
+    line-height: 1.3;
+  }
+  .ascii .box {
+    color: var(--accent);
+  }
+
+  /* ─── Compare grid ─── */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .compare .col h3 {
+    font-size: 13px;
+    color: var(--fg-muted);
+    font-weight: 500;
+    margin: 0 0 8px;
+    letter-spacing: 0.5px;
+  }
+  .compare .col h3 .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    margin-left: 8px;
+  }
+  .compare .col h3 .tag.before {
+    background: rgba(210, 153, 34, 0.15);
+    color: var(--amber);
+  }
+  .compare .col h3 .tag.after {
+    background: rgba(63, 185, 80, 0.15);
+    color: var(--accent);
+  }
+  .compare pre {
+    margin: 0;
+    min-height: 260px;
+    font-size: 12.5px;
+  }
+
+  /* ─── Benchmarks table ─── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-muted);
+  }
+  th {
+    color: var(--fg-dim);
+    font-weight: 500;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: var(--bg-elev);
+  }
+  td:last-child {
+    color: var(--accent);
+    font-weight: 600;
+    text-align: right;
+  }
+
+  /* ─── Footer ─── */
+  footer {
+    padding: 32px 0 48px;
+    color: var(--fg-dim);
+    font-size: 13px;
+  }
+  footer .links {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  footer .meta {
+    color: var(--fg-dim);
+  }
+
+  /* ─── Mobile ─── */
+  @media (max-width: 720px) {
+    .hero h1 { font-size: 34px; }
+    .hero .install { font-size: 14px; padding: 12px 18px; }
+    .compare { grid-template-columns: 1fr; }
+    .ascii { font-size: 11px; }
+    section { padding: 40px 0; }
+    .topbar nav a { margin-left: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <span class="brand">pact-cc</span>
+    <nav>
+      <a href="#problem">problem</a>
+      <a href="#how">how</a>
+      <a href="#benchmarks">benchmarks</a>
+      <a href="#install">install</a>
+    </nav>
+  </div>
+</div>
+
+<!-- ─── HERO ─── -->
+<div class="hero">
+  <div class="wrap">
+    <h1>pact-cc</h1>
+    <div class="rule">─────────────────────────────────────────────────</div>
+    <p class="tagline">Semantic compression middleware for Claude Code.</p>
+    <p class="sub">35x token reduction. &le;2pp completion delta.</p>
+    <div class="install">npx pact-cc install</div>
+  </div>
+</div>
+
+<!-- ─── PROBLEM ─── -->
+<section id="problem">
+  <div class="wrap">
+    <h2>The problem</h2>
+    <p>Claude Code sessions balloon. A 4-hour refactor fills your context window.</p>
+    <p>You summarize and lose fidelity, or you pay for a 200k context on every tool call.</p>
+    <p class="dim">Neither is acceptable.</p>
+  </div>
+</section>
+
+<!-- ─── SOLUTION ─── -->
+<section id="how">
+  <div class="wrap">
+    <h2>The solution</h2>
+    <p class="dim">Structure, dedup, rehydrate on demand.</p>
+    <pre class="ascii">Agent context (natural language)
+         │
+         ▼
+<span class="box">┌─────────────────────────┐</span>
+<span class="box">│</span>  Structure Extraction   <span class="box">│</span>  → typed AST nodes
+<span class="box">└─────────────────────────┘</span>
+         │
+         ▼
+<span class="box">┌─────────────────────────┐</span>
+<span class="box">│</span>  Semantic Dedup         <span class="box">│</span>  → one entity + N deltas
+<span class="box">└─────────────────────────┘</span>
+         │
+         ▼
+<span class="box">┌─────────────────────────┐</span>
+<span class="box">│</span>  PACT Program           <span class="box">│</span>  → ~6-35x smaller
+<span class="box">└─────────────────────────┘</span>
+         │  (on demand)
+         ▼
+<span class="box">┌─────────────────────────┐</span>
+<span class="box">│</span>  Lossless Rehydration   <span class="box">│</span>  → full NL at query time
+<span class="box">└─────────────────────────┘</span></pre>
+  </div>
+</section>
+
+<!-- ─── LIVE EXAMPLE ─── -->
+<section id="example">
+  <div class="wrap">
+    <h2>Live example</h2>
+    <p class="dim">Ten turns of agent context. Actual output from a real compress run.</p>
+    <div class="compare">
+      <div class="col">
+        <h3>Before <span class="tag before">581 tokens</span></h3>
+<pre>Session turn 1: User asked me to
+refactor the entire authentication
+system from JWT localStorage to
+httpOnly cookies. I read
+src/auth/jwt.ts and found the token
+generation at line 45...
+
+Session turn 2: Started implementing
+cookie utilities. Created
+src/utils/cookies.ts with setCookie,
+getCookie, clearCookie helpers. Made
+sure to set httpOnly, secure, and
+sameSite=strict on all writes...
+
+Session turn 3: Refactored the
+generateToken function in
+src/auth/jwt.ts to call our new
+cookie helpers instead of writing
+to localStorage. Updated the
+middleware at src/middleware/auth.ts
+to read from req.cookies...
+
+[truncated for display]</pre>
+      </div>
+      <div class="col">
+        <h3>After <span class="tag after">95 tokens · 6.1x</span></h3>
+<pre>session = {
+ goal: 'jwt-to-cookies'
+ files: {
+  'src/auth/jwt.ts': 'done'
+  'src/middleware/auth.ts': 'done'
+  ...
+ }
+ plan_done: [
+  'create-cookie-utilities'
+  'refactor-jwt-generator'
+  ...
+ ]
+ plan_next: []
+ constraints: [
+  'httpOnly' 'secure' 'sameSite-strict'
+ ]
+ entities: {
+  'generateToken': 'done'
+  'cookie-parser': 'done'
+ }
+}
+. sjson(session)</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── BENCHMARKS ─── -->
+<section id="benchmarks">
+  <div class="wrap">
+    <h2>Benchmarks</h2>
+    <table>
+      <thead>
+        <tr><th>Metric</th><th>Value</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Token reduction</td><td>6–35x</td></tr>
+        <tr><td>Task completion delta</td><td>&le;2pp</td></tr>
+        <tr><td>Install time</td><td>&lt;60s</td></tr>
+        <tr><td>Engine tests</td><td>132/132</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── INSTALL ─── -->
+<section id="install">
+  <div class="wrap">
+    <h2>Install</h2>
+<pre><span style="color:var(--fg-dim)"># Install in your Claude Code project</span>
+<span style="color:var(--accent)">npx pact-cc install</span>
+
+<span style="color:var(--fg-dim)"># Check it's running</span>
+<span style="color:var(--accent)">pact-cc status</span>
+
+<span style="color:var(--fg-dim)"># Manual compress (pipe-safe)</span>
+<span style="color:var(--accent)">echo "..." | pact-cc compress --stats</span></pre>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ─── -->
+<section id="internals">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p>The PACT engine is a compact scripting language. Agent context encodes as a PACT program — entity graphs, file states, plan steps, constraints. Connective tissue (prose, narrative, repeated context) gets stripped. What remains is a lossless structural encoding.</p>
+    <p>When the model needs to reason about a specific entity, the relevant subgraph rehydrates to full natural language at query time. Compression is for what's <em>carried</em>, not what's <em>read</em>. The model always sees complete context for what it's working on.</p>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="wrap">
+    <div class="links">
+      <a href="https://github.com/aidenharris/pact-cc">github.com/aidenharris/pact-cc</a>
+      <a href="https://npmjs.com/package/pact-cc">npmjs.com/package/pact-cc</a>
+      <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a>
+    </div>
+    <div class="meta">pact-cc — semantic compression middleware for Claude Code</div>
+  </div>
+</footer>
+
+</body>
+</html>
