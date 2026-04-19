@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" font-family="ui-monospace, Menlo, monospace">
+<rect width="960" height="560" fill="#0d1117"/>
+<text x="80" y="32" fill="#f0f6fc" font-size="18" font-weight="700">PACT vs semantic-memory baselines</text>
+<text x="80" y="52" fill="#8b949e" font-size="12">11 tasks · compression ratio vs baseline · higher is better — but lossy strategies don't preserve structure</text>
+<line x1="80" y1="72" x2="920" y2="72" stroke="#21262d"/>
+<text x="72" y="76" fill="#8b949e" font-size="10" text-anchor="end">5.0x</text>
+<line x1="80" y1="141.6" x2="920" y2="141.6" stroke="#21262d"/>
+<text x="72" y="145.6" fill="#8b949e" font-size="10" text-anchor="end">4.0x</text>
+<line x1="80" y1="211.2" x2="920" y2="211.2" stroke="#21262d"/>
+<text x="72" y="215.2" fill="#8b949e" font-size="10" text-anchor="end">3.0x</text>
+<line x1="80" y1="280.79999999999995" x2="920" y2="280.79999999999995" stroke="#21262d"/>
+<text x="72" y="284.79999999999995" fill="#8b949e" font-size="10" text-anchor="end">2.0x</text>
+<line x1="80" y1="350.4" x2="920" y2="350.4" stroke="#21262d"/>
+<text x="72" y="354.4" fill="#8b949e" font-size="10" text-anchor="end">1.0x</text>
+<line x1="80" y1="420" x2="920" y2="420" stroke="#21262d"/>
+<text x="72" y="424" fill="#8b949e" font-size="10" text-anchor="end">0.0x</text>
+<rect x="90.69090909090909" y="307.6531601744" width="13.745454545454544" height="112.3468398256" fill="#f85149" opacity="0.85"/>
+<rect x="104.43636363636364" y="279.6598345460381" width="13.745454545454544" height="140.3401654539619" fill="#d29922" opacity="0.85"/>
+<rect x="118.18181818181817" y="234.5362455502437" width="13.745454545454544" height="185.4637544497563" fill="#58a6ff" opacity="0.85"/>
+<rect x="131.92727272727274" y="241.0575396593249" width="13.745454545454544" height="178.9424603406751" fill="#3fb950" opacity="0.85"/>
+<text x="118.18181818181819" y="434" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-40, 118.18181818181819, 434)">auth-refactor</text>
+<rect x="167.05454545454546" y="318.0103760201155" width="13.745454545454544" height="101.9896239798845" fill="#f85149" opacity="0.85"/>
+<rect x="180.8" y="296.14154069682604" width="13.745454545454544" height="123.85845930317396" fill="#d29922" opacity="0.85"/>
+<rect x="194.54545454545456" y="250.31755722548493" width="13.745454545454544" height="169.68244277451507" fill="#58a6ff" opacity="0.85"/>
+<rect x="208.2909090909091" y="277.37717141553685" width="13.745454545454544" height="142.62282858446318" fill="#3fb950" opacity="0.85"/>
+<text x="194.54545454545456" y="434" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-40, 194.54545454545456, 434)">race-condition-deb</text>
+<rect x="243.4181818181818" y="303.1014938190078" width="13.745454545454544" height="116.89850618099214" fill="#f85149" opacity="0.85"/>
+<rect x="257.1636363636364" y="297.2406422829581" width="13.745454545454544" height="122.7593577170419" fill="#d29922" opacity="0.85"/>
+<rect x="270.9090909090909" y="232.0193979882293" width="13.745454545454544" height="187.9806020117707" fill="#58a6ff" opacity="0.85"/>
+<rect x="284.6545454545454" y="266.75957727158374" width="13.745454545454544" height="153.24042272841626" fill="#3fb950" opacity="0.85"/>
+<text x="270.9090909090909" y="434" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-40, 270.9090909090909, 434)">feature-search</text>
+<rect x="319.78181818181815" y="314.5008432781791" width="13.745454545454544" height="105.49915672182088" fill="#f85149" opacity="0.85"/>
+<rect x="333.5272727272727" y="309.35979189667603" width="13.745454545454544" height="110.64020810332394" fill="#d29922" opacity="0.85"/>
+<rect x="347.27272727272725" y="249.43934376245102" width="13.745454545454544" height="170.56065623754898" fill="#58a6ff" opacity="0.85"/>
+<rect x="361.0181818181818" y="283.1114419091797" width="13.745454545454544" height="136.8885580908203" fill="#3fb950" opacity="0.85"/>
+<text x="347.27272727272725" y="434" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-40, 347.27272727272725, 434)">perf-optimization</text>
+<rect x="396.1454545454545" y="301.5816017480192" width="13.745454545454544" height="118.41839825198082" fill="#f85149" opacity="0.85"/>
+<rect x="409.8909090909091" y="294.8930449824299" width="13.745454545454544" height="125.10695501757009" fill="#d29922" opacity="0.85"/>
+<rect x="423.6363636363636" y="228.54903069442904" width="13.745454545454544" height="191.45096930557096" fill="#58a6ff" opacity="0.85"/>
+<rect x="437.3818181818182" y="285.1046594684848" width="13.745454545454544" height="134.89534053151522" fill="#3fb950" opacity="0.85"/>
+<text x="423.6363636363636" y="434" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-40, 423.6363636363636, 434)">migration-postgres</text>
+<rect x="472.5090909090909" y="284.0985938778887" width="13.745454545454544" height="135.90140612211135" fill="#f85149" opacity="0.85"/>
+<rect x="486.25454545454545" y="272.31559725177476" width="13.745454545454544" height="147.68440274822527" fill="#d29922" opacity="0.85"/>
+<rect x="500" y="208.62771399841466" width="13.745454545454544" height="211.37228600158534" fill="#58a6ff" opacity="0.85"/>
+<rect x="513.7454545454545" y="230.4405998663762" width="13.745454545454544" height="189.5594001336238" fill="#3fb950" opacity="0.85"/>
+<text x="500" y="434" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-40, 500, 434)">security-audit</text>
+<rect x="548.8727272727273" y="275.45909399585173" width="13.745454545454544" height="144.54090600414824" fill="#f85149" opacity="0.85"/>
+<rect x="562.6181818181818" y="264.49823711421163" width="13.745454545454544" height="155.50176288578837" fill="#d29922" opacity="0.85"/>
+<rect x="576.3636363636364" y="191.25465314626783" width="13.745454545454544" height="228.74534685373217" fill="#58a6ff" opacity="0.85"/>
+<rect x="590.1090909090909" y="222.52013088684427" width="13.745454545454544" height="197.47986911315573" fill="#3fb950" opacity="0.85"/>
+<text x="576.3636363636363" y="434" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-40, 576.3636363636363, 434)">api-integration</text>
+<rect x="625.2363636363636" y="298.3596639291786" width="13.745454545454544" height="121.6403360708214" fill="#f85149" opacity="0.85"/>
+<rect x="638.9818181818182" y="291.576825355263" width="13.745454545454544" height="128.423174644737" fill="#d29922" opacity="0.85"/>
+<rect x="652.7272727272727" y="227.6198438509848" width="13.745454545454544" height="192.3801561490152" fill="#58a6ff" opacity="0.85"/>
+<rect x="666.4727272727273" y="262.40490889741784" width="13.745454545454544" height="157.5950911025822" fill="#3fb950" opacity="0.85"/>
+<text x="652.7272727272726" y="434" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-40, 652.7272727272726, 434)">testing-coverage</text>
+<rect x="701.6" y="303.5270042121483" width="13.745454545454544" height="116.47299578785167" fill="#f85149" opacity="0.85"/>
+<rect x="715.3454545454546" y="301.58815206951664" width="13.745454545454544" height="118.41184793048338" fill="#d29922" opacity="0.85"/>
+<rect x="729.0909090909091" y="237.0336377335128" width="13.745454545454544" height="182.9663622664872" fill="#58a6ff" opacity="0.85"/>
+<rect x="742.8363636363637" y="278.28552893450893" width="13.745454545454544" height="141.71447106549107" fill="#3fb950" opacity="0.85"/>
+<text x="729.090909090909" y="434" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-40, 729.090909090909, 434)">bug-memory-leak</text>
+<rect x="777.9636363636364" y="276.12597971594175" width="13.745454545454544" height="143.87402028405828" fill="#f85149" opacity="0.85"/>
+<rect x="791.709090909091" y="267.0186401158984" width="13.745454545454544" height="152.9813598841016" fill="#d29922" opacity="0.85"/>
+<rect x="805.4545454545455" y="196.8255906986715" width="13.745454545454544" height="223.1744093013285" fill="#58a6ff" opacity="0.85"/>
+<rect x="819.2" y="215.81722406348325" width="13.745454545454544" height="204.18277593651675" fill="#3fb950" opacity="0.85"/>
+<text x="805.4545454545454" y="434" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-40, 805.4545454545454, 434)">refactor-monolith</text>
+<rect x="854.3272727272728" y="151.58973197522994" width="13.745454545454544" height="268.41026802477006" fill="#f85149" opacity="0.85"/>
+<rect x="868.0727272727273" y="181.66830724287937" width="13.745454545454544" height="238.33169275712063" fill="#d29922" opacity="0.85"/>
+<rect x="881.8181818181819" y="140.9418704804159" width="13.745454545454544" height="279.0581295195841" fill="#58a6ff" opacity="0.85"/>
+<rect x="895.5636363636364" y="103.63636363636368" width="13.745454545454544" height="316.3636363636363" fill="#3fb950" opacity="0.85"/>
+<text x="881.8181818181818" y="434" fill="#8b949e" font-size="10" text-anchor="end" transform="rotate(-40, 881.8181818181818, 434)">long-session-monor</text>
+<rect x="80" y="516" width="12" height="12" fill="#f85149"/>
+<text x="98" y="526" fill="#f0f6fc" font-size="11">sliding-5 (lossy)</text>
+<rect x="280" y="516" width="12" height="12" fill="#d29922"/>
+<text x="298" y="526" fill="#f0f6fc" font-size="11">summary (lossy)</text>
+<rect x="480" y="516" width="12" height="12" fill="#58a6ff"/>
+<text x="498" y="526" fill="#f0f6fc" font-size="11">obs-log / claude-mem (lossy)</text>
+<rect x="680" y="516" width="12" height="12" fill="#3fb950"/>
+<text x="698" y="526" fill="#f0f6fc" font-size="11">PACT (lossless structural)</text>
+<text x="80" y="540" fill="#8b949e" font-size="11">total ratios across all 11 tasks — sliding-5: 2.19x   ·   summarization: 2.28x   ·   obs-log: 3.15x   ·   pact: 2.86x</text>
+<line x1="80" y1="420" x2="920" y2="420" stroke="#8b949e"/>
+<line x1="80" y1="72" x2="80" y2="420" stroke="#8b949e"/>
+</svg>
