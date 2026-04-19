@@ -1,0 +1,148 @@
+{
+  "date": "2026-04-19",
+  "mode": "heuristic",
+  "threshold": 500,
+  "summary": {
+    "avgRatio": 2.4636363636363634,
+    "totalRatio": 2.765148823121309,
+    "baselineRate": 1,
+    "pactRate": 1,
+    "delta": 0,
+    "totalBaseline": 163412,
+    "totalPact": 59097
+  },
+  "results": [
+    {
+      "task_id": "001-auth-refactor",
+      "category": "refactor",
+      "turns": 15,
+      "baseline_tokens": 10256,
+      "pact_tokens": 3960,
+      "ratio": 2.6,
+      "baseline_completed": true,
+      "pact_completed": true,
+      "compressions": 2,
+      "duration_ms": 1
+    },
+    {
+      "task_id": "002-race-condition-debug",
+      "category": "debug",
+      "turns": 13,
+      "baseline_tokens": 7414,
+      "pact_tokens": 3568,
+      "ratio": 2.1,
+      "baseline_completed": true,
+      "pact_completed": true,
+      "compressions": 2,
+      "duration_ms": 1
+    },
+    {
+      "task_id": "003-feature-search",
+      "category": "feature",
+      "turns": 16,
+      "baseline_tokens": 9659,
+      "pact_tokens": 4388,
+      "ratio": 2.2,
+      "baseline_completed": true,
+      "pact_completed": true,
+      "compressions": 2,
+      "duration_ms": 0
+    },
+    {
+      "task_id": "004-perf-optimization",
+      "category": "perf",
+      "turns": 14,
+      "baseline_tokens": 6977,
+      "pact_tokens": 3806,
+      "ratio": 1.8,
+      "baseline_completed": true,
+      "pact_completed": true,
+      "compressions": 1,
+      "duration_ms": 0
+    },
+    {
+      "task_id": "005-migration-postgres",
+      "category": "migrate",
+      "turns": 16,
+      "baseline_tokens": 8896,
+      "pact_tokens": 4531,
+      "ratio": 2,
+      "baseline_completed": true,
+      "pact_completed": true,
+      "compressions": 2,
+      "duration_ms": 0
+    },
+    {
+      "task_id": "006-security-audit",
+      "category": "security",
+      "turns": 20,
+      "baseline_tokens": 13731,
+      "pact_tokens": 5252,
+      "ratio": 2.6,
+      "baseline_completed": true,
+      "pact_completed": true,
+      "compressions": 2,
+      "duration_ms": 0
+    },
+    {
+      "task_id": "007-api-integration",
+      "category": "feature",
+      "turns": 20,
+      "baseline_tokens": 14889,
+      "pact_tokens": 5524,
+      "ratio": 2.7,
+      "baseline_completed": true,
+      "pact_completed": true,
+      "compressions": 2,
+      "duration_ms": 0
+    },
+    {
+      "task_id": "008-testing-coverage",
+      "category": "test",
+      "turns": 17,
+      "baseline_tokens": 10402,
+      "pact_tokens": 4724,
+      "ratio": 2.2,
+      "baseline_completed": true,
+      "pact_completed": true,
+      "compressions": 2,
+      "duration_ms": 1
+    },
+    {
+      "task_id": "009-bug-memory-leak",
+      "category": "debug",
+      "turns": 16,
+      "baseline_tokens": 8337,
+      "pact_tokens": 4353,
+      "ratio": 1.9,
+      "baseline_completed": true,
+      "pact_completed": true,
+      "compressions": 1,
+      "duration_ms": 0
+    },
+    {
+      "task_id": "010-refactor-monolith",
+      "category": "refactor",
+      "turns": 20,
+      "baseline_tokens": 14335,
+      "pact_tokens": 5232,
+      "ratio": 2.7,
+      "baseline_completed": true,
+      "pact_completed": true,
+      "compressions": 2,
+      "duration_ms": 0
+    },
+    {
+      "task_id": "011-long-session-monorepo",
+      "category": "long-session",
+      "turns": 50,
+      "baseline_tokens": 58516,
+      "pact_tokens": 13759,
+      "ratio": 4.3,
+      "baseline_completed": true,
+      "pact_completed": true,
+      "compressions": 4,
+      "duration_ms": 0
+    }
+  ]
+}

@@ -1,0 +1,256 @@
+{
+  "date": "2026-04-19",
+  "threshold": 500,
+  "strategies": {
+    "baseline": {
+      "total": 163412,
+      "ratio": 1,
+      "perTask": {
+        "001-auth-refactor": {
+          "tokens": 10256,
+          "ratio": 1
+        },
+        "002-race-condition-debug": {
+          "tokens": 7414,
+          "ratio": 1
+        },
+        "003-feature-search": {
+          "tokens": 9659,
+          "ratio": 1
+        },
+        "004-perf-optimization": {
+          "tokens": 6977,
+          "ratio": 1
+        },
+        "005-migration-postgres": {
+          "tokens": 8896,
+          "ratio": 1
+        },
+        "006-security-audit": {
+          "tokens": 13731,
+          "ratio": 1
+        },
+        "007-api-integration": {
+          "tokens": 14889,
+          "ratio": 1
+        },
+        "008-testing-coverage": {
+          "tokens": 10402,
+          "ratio": 1
+        },
+        "009-bug-memory-leak": {
+          "tokens": 8337,
+          "ratio": 1
+        },
+        "010-refactor-monolith": {
+          "tokens": 14335,
+          "ratio": 1
+        },
+        "011-long-session-monorepo": {
+          "tokens": 58516,
+          "ratio": 1
+        }
+      }
+    },
+    "sliding-5": {
+      "total": 74628,
+      "ratio": 2.1896875167497454,
+      "perTask": {
+        "001-auth-refactor": {
+          "tokens": 6387,
+          "ratio": 1.6057617034601535
+        },
+        "002-race-condition-debug": {
+          "tokens": 5086,
+          "ratio": 1.457727093983484
+        },
+        "003-feature-search": {
+          "tokens": 5781,
+          "ratio": 1.6708181975436776
+        },
+        "004-perf-optimization": {
+          "tokens": 4627,
+          "ratio": 1.5078884806570132
+        },
+        "005-migration-postgres": {
+          "tokens": 5256,
+          "ratio": 1.6925418569254185
+        },
+        "006-security-audit": {
+          "tokens": 7069,
+          "ratio": 1.9424246710991653
+        },
+        "007-api-integration": {
+          "tokens": 7207,
+          "ratio": 2.0659081448591645
+        },
+        "008-testing-coverage": {
+          "tokens": 5983,
+          "ratio": 1.7385926792578974
+        },
+        "009-bug-memory-leak": {
+          "tokens": 5008,
+          "ratio": 1.6647364217252396
+        },
+        "010-refactor-monolith": {
+          "tokens": 6971,
+          "ratio": 2.0563764165829865
+        },
+        "011-long-session-monorepo": {
+          "tokens": 15253,
+          "ratio": 3.8363600603160033
+        }
+      }
+    },
+    "summarization": {
+      "total": 71724,
+      "ratio": 2.278344766047627,
+      "perTask": {
+        "001-auth-refactor": {
+          "tokens": 5113,
+          "ratio": 2.0058673968316056
+        },
+        "002-race-condition-debug": {
+          "tokens": 4188,
+          "ratio": 1.7702960840496658
+        },
+        "003-feature-search": {
+          "tokens": 5505,
+          "ratio": 1.7545867393278838
+        },
+        "004-perf-optimization": {
+          "tokens": 4412,
+          "ratio": 1.581368993653672
+        },
+        "005-migration-postgres": {
+          "tokens": 4975,
+          "ratio": 1.788140703517588
+        },
+        "006-security-audit": {
+          "tokens": 6505,
+          "ratio": 2.110837817063797
+        },
+        "007-api-integration": {
+          "tokens": 6699,
+          "ratio": 2.2225705329153604
+        },
+        "008-testing-coverage": {
+          "tokens": 5667,
+          "ratio": 1.8355390859361214
+        },
+        "009-bug-memory-leak": {
+          "tokens": 4926,
+          "ratio": 1.6924482338611448
+        },
+        "010-refactor-monolith": {
+          "tokens": 6556,
+          "ratio": 2.186546674801708
+        },
+        "011-long-session-monorepo": {
+          "tokens": 17178,
+          "ratio": 3.4064501106065896
+        }
+      }
+    },
+    "obs-log": {
+      "total": 51869,
+      "ratio": 3.1504752356899113,
+      "perTask": {
+        "001-auth-refactor": {
+          "tokens": 3869,
+          "ratio": 2.6508141638666323
+        },
+        "002-race-condition-debug": {
+          "tokens": 3057,
+          "ratio": 2.4252535165194637
+        },
+        "003-feature-search": {
+          "tokens": 3595,
+          "ratio": 2.686787204450626
+        },
+        "004-perf-optimization": {
+          "tokens": 2862,
+          "ratio": 2.4378057302585603
+        },
+        "005-migration-postgres": {
+          "tokens": 3251,
+          "ratio": 2.736388803445094
+        },
+        "006-security-audit": {
+          "tokens": 4545,
+          "ratio": 3.0211221122112213
+        },
+        "007-api-integration": {
+          "tokens": 4554,
+          "ratio": 3.269433465085639
+        },
+        "008-testing-coverage": {
+          "tokens": 3783,
+          "ratio": 2.7496695744118425
+        },
+        "009-bug-memory-leak": {
+          "tokens": 3188,
+          "ratio": 2.6151191969887075
+        },
+        "010-refactor-monolith": {
+          "tokens": 4494,
+          "ratio": 3.1898086337338674
+        },
+        "011-long-session-monorepo": {
+          "tokens": 14671,
+          "ratio": 3.9885488378433647
+        }
+      }
+    },
+    "pact": {
+      "total": 57167,
+      "ratio": 2.858502282785523,
+      "perTask": {
+        "001-auth-refactor": {
+          "tokens": 4010,
+          "ratio": 2.5576059850374064
+        },
+        "002-race-condition-debug": {
+          "tokens": 3637,
+          "ratio": 2.0384932636788564
+        },
+        "003-feature-search": {
+          "tokens": 4410,
+          "ratio": 2.190249433106576
+        },
+        "004-perf-optimization": {
+          "tokens": 3566,
+          "ratio": 1.9565339315759955
+        },
+        "005-migration-postgres": {
+          "tokens": 4614,
+          "ratio": 1.9280450801907238
+        },
+        "006-security-audit": {
+          "tokens": 5068,
+          "ratio": 2.7093528018942385
+        },
+        "007-api-integration": {
+          "tokens": 5275,
+          "ratio": 2.8225592417061613
+        },
+        "008-testing-coverage": {
+          "tokens": 4618,
+          "ratio": 2.252490255521871
+        },
+        "009-bug-memory-leak": {
+          "tokens": 4116,
+          "ratio": 2.0255102040816326
+        },
+        "010-refactor-monolith": {
+          "tokens": 4912,
+          "ratio": 2.9183631921824102
+        },
+        "011-long-session-monorepo": {
+          "tokens": 12941,
+          "ratio": 4.521752569353218
+        }
+      }
+    }
+  }
+}
