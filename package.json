@@ -50,8 +50,8 @@
     "pact",
     "tokens"
   ],
-  "author": "Aiden Hecker",
-  "license": "MIT",
+  "author": "Aiden Hecker <heckeraiden@gmail.com>",
+  "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
     "url": "https://github.com/hmatrades/PACT"

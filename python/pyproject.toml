@@ -13,7 +13,7 @@ keywords = ["claude", "claude-code", "compression", "ai", "agents"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: Apache Software License",
+  "License :: Other/Proprietary License",
   "Programming Language :: Python :: 3",
 ]
 

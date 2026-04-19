@@ -60,7 +60,7 @@ pact-cc/
 ├── JUDGE_QA.md                 ← Pre-read for judges / technical FAQ
 ├── package.json                ← npm package: name=pact-cc
 ├── tsconfig.json               ← TypeScript config
-├── LICENSE                     ← MIT
+├── LICENSE                     ← PolyForm Noncommercial 1.0.0
 └── .gitignore
 ```
 

@@ -95,7 +95,7 @@ Below the pipeline, thin 10pt labels in `#8b949e`:
 ### Branding strip (bottom)
 
 ```
-├─ pact-cc · semantic compression middleware ─────── v0.1 ─── MIT ─┤
+├─ pact-cc · semantic compression middleware ── v0.1 ── PolyForm NC ─┤
 ```
 
 Set in 9pt mono, `#30363d` — subtle credit.

@@ -4,8 +4,12 @@
 3–35x token reduction. ≤2pp task completion delta. One command to install.
 
 [![Tests](https://img.shields.io/badge/tests-140%20passing-brightgreen)](src/engine.test.ts)
-[![npm](https://img.shields.io/badge/npm-pact--cc-blue)](https://www.npmjs.com/package/pact-cc)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-PolyForm%20NC%201.0.0-orange)](LICENSE)
+[![Status](https://img.shields.io/badge/status-source--available%20%C2%B7%20noncommercial-lightgrey)](LICENSE)
+
+> **Source-available, noncommercial.** You may read, study, and use PACT for personal
+> / research / nonprofit purposes. Commercial use requires a separate license —
+> contact heckeraiden@gmail.com. See [LICENSE](LICENSE) for full terms.
 
 ## Install
 
@@ -95,4 +99,11 @@ node benchmarks/run.mjs # 10-task structural benchmark
 
 ## License
 
-Apache 2.0
+**PolyForm Noncommercial 1.0.0** — source-available, noncommercial use only.
+
+Commercial use (including using PACT inside a commercial AI product to reduce
+your token spend) requires a separate commercial license. Email
+**heckeraiden@gmail.com** to inquire — commercial licenses are available at
+reasonable terms.
+
+Full terms: [LICENSE](LICENSE). License text: <https://polyformproject.org/licenses/noncommercial/1.0.0>.
