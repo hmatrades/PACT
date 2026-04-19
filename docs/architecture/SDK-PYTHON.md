@@ -147,7 +147,7 @@ requires-python = ">=3.10"
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/aidenharris/pact-cc"
+Homepage = "https://github.com/hmatrades/PACT"
 
 [tool.hatch.build.targets.wheel]
 packages = ["pact_cc"]

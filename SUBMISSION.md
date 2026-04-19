@@ -2,7 +2,7 @@
 
 **Category:** Built with Claude Code  
 **Submitter:** Aiden Hecker  
-**Repo:** github.com/aidenharris/pact-cc  
+**Repo:** github.com/hmatrades/PACT  
 **npm:** npmjs.com/package/pact-cc  
 
 ---

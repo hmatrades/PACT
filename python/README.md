@@ -1,6 +1,6 @@
 # pact-cc (Python)
 
-Python SDK for [pact-cc](https://github.com/aidenharris/pact-cc).
+Python SDK for [pact-cc](https://github.com/hmatrades/PACT).
 
 ## Install
 

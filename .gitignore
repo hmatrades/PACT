@@ -23,3 +23,13 @@ __pycache__/
 # Environment
 .env
 .env.local
+
+# Local Claude Code session artifacts — not for public consumption
+.claude/
+
+# Hackathon prep / scratch — private working docs with old claims + judge prep
+meta/
+scratch/
+
+# OS metadata
+.DS_Store
