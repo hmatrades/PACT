@@ -253,6 +253,7 @@
   <div class="wrap">
     <span class="brand">pact-cc</span>
     <nav>
+      <a href="#testimony">receipt</a>
       <a href="#problem">problem</a>
       <a href="#how">how</a>
       <a href="#benchmarks">benchmarks</a>
@@ -271,6 +272,101 @@
     <div class="install">npx pact-cc install</div>
   </div>
 </div>
+
+<!-- ─── TESTIMONY / FUNNEL ─── -->
+<section id="testimony">
+  <div class="wrap">
+    <h2>The receipt</h2>
+    <p class="dim">This is the conversation that built PACT, compressed by PACT.</p>
+    <img src="funnel.svg" alt="PACT funnel: session.md compresses to session.pact, 352x smaller" style="width:100%;max-width:1200px;display:block;margin:0 auto 16px;border:1px solid var(--border-muted);border-radius:6px"/>
+    <table>
+      <thead>
+        <tr><th>Artifact</th><th>Size</th><th>vs PACT</th><th>Download</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Raw Claude Code session (.jsonl)</td><td>1.45 MB</td><td>1,247×</td><td class="dim">local only</td></tr>
+        <tr><td>Rendered conversation (session.md)</td><td>418 KB</td><td><b>352×</b></td><td><a href="testimony/session.md">session.md</a></td></tr>
+        <tr><td>Distilled prose (session-distilled.md)</td><td>6.1 KB</td><td>5.1×</td><td><a href="testimony/session-distilled.md">session-distilled.md</a></td></tr>
+        <tr><td>PACT program (session.pact)</td><td><b>1.19 KB</b></td><td>—</td><td><a href="testimony/session.pact">session.pact</a></td></tr>
+      </tbody>
+    </table>
+    <p class="dim" style="margin-top:12px">Engine-validated. Losslessly addressable for files, entities, plan, and constraints. Rehydrate any subgraph back to natural language on demand.</p>
+
+    <h3 style="margin-top:36px">Savings calculator</h3>
+    <p class="dim">Scale from this session's actual measurement. Every number below is live math on the data above — adjust the inputs to project.</p>
+
+    <div id="calc" style="border:1px solid var(--border-muted);border-radius:6px;padding:16px 20px;background:rgba(22,27,34,0.45);margin-top:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px">
+        <label style="display:block">
+          <span class="dim" style="font-size:12px">sessions per week per engineer</span><br/>
+          <input id="calc-sessions" type="number" min="1" max="200" value="25" style="width:100%;background:#0d1117;border:1px solid var(--border-muted);color:#f0f6fc;padding:6px 10px;border-radius:4px;font-family:inherit;font-size:14px"/>
+        </label>
+        <label style="display:block">
+          <span class="dim" style="font-size:12px">team size</span><br/>
+          <input id="calc-team" type="number" min="1" max="10000" value="20" style="width:100%;background:#0d1117;border:1px solid var(--border-muted);color:#f0f6fc;padding:6px 10px;border-radius:4px;font-family:inherit;font-size:14px"/>
+        </label>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:8px">
+        <label style="display:block">
+          <span class="dim" style="font-size:12px">price USD / 1M input tokens</span><br/>
+          <input id="calc-price" type="number" min="0" max="100" step="0.1" value="3.0" style="width:100%;background:#0d1117;border:1px solid var(--border-muted);color:#f0f6fc;padding:6px 10px;border-radius:4px;font-family:inherit;font-size:14px"/>
+        </label>
+        <label style="display:block">
+          <span class="dim" style="font-size:12px">avg saved tokens per session<br/><span style="font-size:10px">(default = this session: 106,708)</span></span>
+          <input id="calc-tokens" type="number" min="0" value="106708" style="width:100%;background:#0d1117;border:1px solid var(--border-muted);color:#f0f6fc;padding:6px 10px;border-radius:4px;font-family:inherit;font-size:14px"/>
+        </label>
+      </div>
+
+      <table style="margin-top:16px">
+        <thead><tr><th>Window</th><th>Tokens saved</th><th>USD saved</th></tr></thead>
+        <tbody>
+          <tr><td>per session</td><td id="r-session-tok"></td><td id="r-session-usd"></td></tr>
+          <tr><td>per engineer · week</td><td id="r-week-tok"></td><td id="r-week-usd"></td></tr>
+          <tr><td>per engineer · month (4.3 weeks)</td><td id="r-month-tok"></td><td id="r-month-usd"></td></tr>
+          <tr><td>team · month</td><td id="r-team-month-tok"></td><td id="r-team-month-usd"></td></tr>
+          <tr><td>team · year</td><td id="r-team-year-tok"></td><td id="r-team-year-usd"></td></tr>
+        </tbody>
+      </table>
+      <p class="dim" style="margin-top:8px;font-size:11px">Base measurement: this session's 106,708 saved tokens / 419 KB / 350.9× ratio. Pricing defaults to Sonnet 4.6 input ($3/1M). All numbers assume input-token cost only — real savings are higher once output caching and per-turn overhead are included.</p>
+    </div>
+
+    <script>
+    (function() {
+      function fmt(n) { return n.toLocaleString(undefined, { maximumFractionDigits: 0 }) }
+      function usd(n) { return '$' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
+      function calc() {
+        const sessions = +document.getElementById('calc-sessions').value || 0
+        const team = +document.getElementById('calc-team').value || 0
+        const price = +document.getElementById('calc-price').value || 0
+        const perSessionTok = +document.getElementById('calc-tokens').value || 0
+        const perSessionUsd = (perSessionTok / 1e6) * price
+        const weekTok = perSessionTok * sessions
+        const weekUsd = perSessionUsd * sessions
+        const monthTok = weekTok * 4.3
+        const monthUsd = weekUsd * 4.3
+        const teamMonthTok = monthTok * team
+        const teamMonthUsd = monthUsd * team
+        const teamYearTok = teamMonthTok * 12
+        const teamYearUsd = teamMonthUsd * 12
+        document.getElementById('r-session-tok').textContent = fmt(perSessionTok)
+        document.getElementById('r-session-usd').textContent = usd(perSessionUsd)
+        document.getElementById('r-week-tok').textContent = fmt(weekTok)
+        document.getElementById('r-week-usd').textContent = usd(weekUsd)
+        document.getElementById('r-month-tok').textContent = fmt(monthTok)
+        document.getElementById('r-month-usd').textContent = usd(monthUsd)
+        document.getElementById('r-team-month-tok').textContent = fmt(teamMonthTok)
+        document.getElementById('r-team-month-usd').textContent = usd(teamMonthUsd)
+        document.getElementById('r-team-year-tok').textContent = fmt(teamYearTok)
+        document.getElementById('r-team-year-usd').textContent = usd(teamYearUsd)
+      }
+      ['calc-sessions','calc-team','calc-price','calc-tokens'].forEach(id => {
+        document.getElementById(id).addEventListener('input', calc)
+      })
+      calc()
+    })()
+    </script>
+  </div>
+</section>
 
 <!-- ─── PROBLEM ─── -->
 <section id="problem">
@@ -397,7 +493,7 @@ to read from req.cookies...
       Reproduce in one command: <code style="background:var(--bg-code);padding:2px 6px;border-radius:3px">npx pact-cc benchmark</code>
       (heuristic, no API key needed) or <code style="background:var(--bg-code);padding:2px 6px;border-radius:3px">pact-cc benchmark --real</code>
       (uses your <code>ANTHROPIC_API_KEY</code>). Ratios scale with session length — see
-      <a href="https://github.com/aidenharris/pact-cc/tree/main/benchmarks">benchmarks/</a> for per-task details.
+      <a href="https://github.com/hmatrades/PACT/tree/main/benchmarks">benchmarks/</a> for per-task details.
     </p>
   </div>
 </section>
@@ -430,7 +526,7 @@ to read from req.cookies...
 <footer>
   <div class="wrap">
     <div class="links">
-      <a href="https://github.com/aidenharris/pact-cc">github.com/aidenharris/pact-cc</a>
+      <a href="https://github.com/hmatrades/PACT">github.com/hmatrades/PACT</a>
       <a href="https://npmjs.com/package/pact-cc">npmjs.com/package/pact-cc</a>
       <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a>
     </div>

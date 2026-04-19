@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" width="1200" height="520" font-family="ui-monospace, SF Mono, Menlo, monospace">
+  <defs>
+    <linearGradient id="mdGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#58a6ff"/>
+      <stop offset="1" stop-color="#1f6feb"/>
+    </linearGradient>
+    <linearGradient id="pactGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3fb950"/>
+      <stop offset="1" stop-color="#238636"/>
+    </linearGradient>
+    <linearGradient id="funnelGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#21262d" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#161b22" stop-opacity="0.95"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowStrong" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="520" fill="#0d1117"/>
+
+  <!-- Title -->
+  <text x="600" y="36" fill="#f0f6fc" font-size="20" font-weight="700" text-anchor="middle">PACT compression funnel · session.md → session.pact</text>
+  <text x="600" y="58" fill="#8b949e" font-size="12" text-anchor="middle">418 KB of live conversation reduced to 1.19 KB of structured state · 352× smaller · engine-validated</text>
+
+  <!-- Scale bar (left: big md) -->
+  <g transform="translate(90, 140)">
+    <text x="120" y="-14" fill="#8b949e" font-size="11" text-anchor="middle">input</text>
+
+    <!-- .md file icon, tall to show size -->
+    <g>
+      <rect x="60" y="0" width="120" height="200" rx="6" fill="url(#mdGrad)" filter="url(#glow)" opacity="0.95"/>
+      <rect x="60" y="0" width="120" height="200" rx="6" fill="none" stroke="#58a6ff" stroke-width="1.5" opacity="0.9"/>
+      <!-- corner fold -->
+      <path d="M 160 0 L 180 20 L 160 20 Z" fill="#0d1117" opacity="0.6"/>
+      <!-- fake text lines to evoke an .md -->
+      <g fill="#0d1117" opacity="0.45">
+        <rect x="76" y="36" width="70" height="3"/>
+        <rect x="76" y="48" width="88" height="2"/>
+        <rect x="76" y="58" width="60" height="2"/>
+        <rect x="76" y="68" width="82" height="2"/>
+        <rect x="76" y="78" width="74" height="2"/>
+        <rect x="76" y="88" width="88" height="2"/>
+        <rect x="76" y="98" width="52" height="2"/>
+        <rect x="76" y="108" width="80" height="2"/>
+        <rect x="76" y="118" width="68" height="2"/>
+        <rect x="76" y="128" width="86" height="2"/>
+        <rect x="76" y="138" width="72" height="2"/>
+        <rect x="76" y="148" width="64" height="2"/>
+        <rect x="76" y="158" width="84" height="2"/>
+        <rect x="76" y="168" width="58" height="2"/>
+        <rect x="76" y="178" width="80" height="2"/>
+      </g>
+      <text x="120" y="26" fill="#f0f6fc" font-size="11" font-weight="700" text-anchor="middle">session.md</text>
+    </g>
+
+    <text x="120" y="222" fill="#58a6ff" font-size="16" font-weight="700" text-anchor="middle">418 KB</text>
+    <text x="120" y="240" fill="#8b949e" font-size="10" text-anchor="middle">rendered conversation</text>
+    <text x="120" y="254" fill="#8b949e" font-size="10" text-anchor="middle">~107,000 BPE tokens</text>
+  </g>
+
+  <!-- Funnel shape in the middle -->
+  <g transform="translate(400, 140)">
+    <!-- Funnel body -->
+    <path d="M 0 0 L 360 0 L 240 180 L 120 180 Z" fill="url(#funnelGrad)" stroke="#30363d" stroke-width="2"/>
+    <!-- Funnel neck extending right -->
+    <rect x="120" y="178" width="120" height="22" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+
+    <!-- Inner grid glow lines -->
+    <g stroke="#30363d" stroke-width="1" opacity="0.5">
+      <line x1="60" y1="0" x2="150" y2="180"/>
+      <line x1="120" y1="0" x2="180" y2="180"/>
+      <line x1="180" y1="0" x2="180" y2="180"/>
+      <line x1="240" y1="0" x2="210" y2="180"/>
+      <line x1="300" y1="0" x2="210" y2="180"/>
+    </g>
+
+    <!-- Funnel top label -->
+    <text x="180" y="-16" fill="#d29922" font-size="11" text-anchor="middle">[ Haiku: extract structured JSON ]</text>
+    <text x="180" y="-2" fill="#d29922" font-size="9" text-anchor="middle">↓ jsonToPACT() · deterministic encoder</text>
+
+    <!-- Flowing prose bits getting sucked in -->
+    <g font-size="9" fill="#58a6ff" opacity="0.8">
+      <text x="12" y="16">## user</text>
+      <text x="60" y="28">build it my love</text>
+      <text x="200" y="20">## assistant</text>
+      <text x="240" y="36">Reading files...</text>
+      <text x="30" y="54">## tool_use</text>
+      <text x="160" y="62">Edit src/cli.ts</text>
+      <text x="260" y="70">bash: npm test</text>
+      <text x="20" y="84">140 tests pass</text>
+      <text x="140" y="94">## user: eat them alive</text>
+      <text x="40" y="110">benchmarks/run.mjs</text>
+      <text x="180" y="118">chart-compare.svg</text>
+      <text x="80" y="134">compress(context)</text>
+      <text x="200" y="144">SUBMISSION.md v3</text>
+      <text x="50" y="160">docs/index.html</text>
+      <text x="190" y="170">commit abf5fea</text>
+    </g>
+
+    <!-- Compression particles flowing through neck -->
+    <g fill="#3fb950">
+      <circle cx="132" cy="189" r="2">
+        <animate attributeName="cx" from="122" to="238" dur="1.6s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" dur="1.6s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="132" cy="189" r="2">
+        <animate attributeName="cx" from="122" to="238" dur="1.6s" begin="0.4s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" dur="1.6s" begin="0.4s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="132" cy="189" r="2">
+        <animate attributeName="cx" from="122" to="238" dur="1.6s" begin="0.8s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" dur="1.6s" begin="0.8s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="132" cy="189" r="2">
+        <animate attributeName="cx" from="122" to="238" dur="1.6s" begin="1.2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;1;1;0" dur="1.6s" begin="1.2s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <!-- Label below funnel -->
+    <text x="180" y="218" fill="#8b949e" font-size="10" text-anchor="middle">~70% connective tissue dropped</text>
+    <text x="180" y="232" fill="#8b949e" font-size="10" text-anchor="middle">lossless on files · plan · entities · constraints</text>
+  </g>
+
+  <!-- Right side: PACT file output -->
+  <g transform="translate(890, 240)">
+    <text x="90" y="-94" fill="#8b949e" font-size="11" text-anchor="middle">output</text>
+
+    <!-- Tiny .pact file — dramatically smaller -->
+    <g filter="url(#glowStrong)">
+      <rect x="56" y="-74" width="70" height="20" rx="4" fill="url(#pactGrad)" opacity="0.98">
+        <animate attributeName="opacity" values="0.85;1;0.85" dur="2s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="56" y="-74" width="70" height="20" rx="4" fill="none" stroke="#3fb950" stroke-width="1.5"/>
+      <path d="M 116 -74 L 126 -64 L 116 -64 Z" fill="#0d1117" opacity="0.6"/>
+      <text x="91" y="-61" fill="#f0f6fc" font-size="8" font-weight="700" text-anchor="middle">session.pact</text>
+    </g>
+
+    <text x="91" y="-30" fill="#3fb950" font-size="18" font-weight="700" text-anchor="middle">1.19 KB</text>
+    <text x="91" y="-12" fill="#8b949e" font-size="10" text-anchor="middle">structured state</text>
+    <text x="91" y="2" fill="#8b949e" font-size="10" text-anchor="middle">~304 BPE tokens</text>
+
+    <!-- PACT syntax preview -->
+    <g transform="translate(-10, 24)" font-size="8" fill="#3fb950" opacity="0.95">
+      <rect x="0" y="0" width="210" height="150" rx="4" fill="#0d1117" stroke="#30363d"/>
+      <text x="10" y="16">session = {</text>
+      <text x="10" y="30" fill="#8b949e"> goal: <tspan fill="#a5d6ff">'ship-pact-hackathon'</tspan></text>
+      <text x="10" y="44" fill="#8b949e"> files: <tspan fill="#a5d6ff">{ 12 paths }</tspan></text>
+      <text x="10" y="58" fill="#8b949e"> plan_done: <tspan fill="#a5d6ff">[12 steps]</tspan></text>
+      <text x="10" y="72" fill="#8b949e"> plan_next: <tspan fill="#a5d6ff">[5 steps]</tspan></text>
+      <text x="10" y="86" fill="#8b949e"> constraints: <tspan fill="#a5d6ff">[6 rules]</tspan></text>
+      <text x="10" y="100" fill="#8b949e"> entities: <tspan fill="#a5d6ff">{ 8 refs }</tspan></text>
+      <text x="10" y="114">}</text>
+      <text x="10" y="130" fill="#d29922">. sjson(session)</text>
+    </g>
+  </g>
+
+  <!-- Ratio callout centered below -->
+  <g transform="translate(600, 470)">
+    <rect x="-140" y="-24" width="280" height="40" rx="20" fill="#0d1117" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="0" y="4" fill="#3fb950" font-size="18" font-weight="700" text-anchor="middle">352× smaller · lossless structural</text>
+  </g>
+
+  <!-- Arrow from md into funnel -->
+  <g stroke="#58a6ff" stroke-width="2" fill="none" opacity="0.8">
+    <path d="M 270 240 L 395 240" stroke-dasharray="6 4"/>
+    <polygon points="395,240 385,234 385,246" fill="#58a6ff" stroke="none"/>
+  </g>
+
+  <!-- Arrow from funnel neck into pact -->
+  <g stroke="#3fb950" stroke-width="2" fill="none" opacity="0.9">
+    <path d="M 760 330 L 885 240" stroke-dasharray="6 4"/>
+    <polygon points="885,240 872,238 878,250" fill="#3fb950" stroke="none"/>
+  </g>
+
+</svg>

@@ -13,27 +13,61 @@ export type PACTState = {
   sessionsCompressed: number
   avgRatio: number
   tokensSaved: number
+  bytesSaved: number
 }
 
-export type StatusResult = PACTState
+export type SavingsBreakdown = {
+  tokensSaved: number
+  bytesSaved: number
+  usdSaved: number
+  pricePerMTokens: number
+}
+
+export type StatusResult = PACTState & { savings: SavingsBreakdown }
 
 const DEFAULT_THRESHOLD = 0.80
 const DEFAULT_MODEL = 'claude-haiku-4-5-20251001'
+// Claude Sonnet 4.6 input pricing — the model most Claude Code sessions use.
+// Override with PACT_PRICE_PER_MTOKENS env var for other models.
+const DEFAULT_PRICE_PER_MTOKENS = 3.0
+
+function priceUSDPerMTokens(): number {
+  const env = process.env.PACT_PRICE_PER_MTOKENS
+  if (env) {
+    const n = Number(env)
+    if (Number.isFinite(n) && n > 0) return n
+  }
+  return DEFAULT_PRICE_PER_MTOKENS
+}
+
+export function computeSavings(state: PACTState): SavingsBreakdown {
+  const pricePerMTokens = priceUSDPerMTokens()
+  const usdSaved = (state.tokensSaved / 1_000_000) * pricePerMTokens
+  return {
+    tokensSaved: state.tokensSaved,
+    bytesSaved: state.bytesSaved,
+    usdSaved,
+    pricePerMTokens,
+  }
+}
 
 function pactDir(projectDir: string) { return join(projectDir, '.pact') }
 function stateFile(projectDir: string) { return join(pactDir(projectDir), 'state.json') }
 function hookFile(projectDir: string) { return join(pactDir(projectDir), 'hook.js') }
 function settingsFile(projectDir: string) { return join(projectDir, '.claude', 'settings.json') }
 
+function emptyState(): PACTState {
+  return { installed: false, threshold: DEFAULT_THRESHOLD, model: DEFAULT_MODEL, sessionsCompressed: 0, avgRatio: 0, tokensSaved: 0, bytesSaved: 0 }
+}
+
 export function readState(projectDir: string): PACTState {
   const f = stateFile(projectDir)
-  if (!existsSync(f)) {
-    return { installed: false, threshold: DEFAULT_THRESHOLD, model: DEFAULT_MODEL, sessionsCompressed: 0, avgRatio: 0, tokensSaved: 0 }
-  }
+  if (!existsSync(f)) return emptyState()
   try {
-    return JSON.parse(readFileSync(f, 'utf8')) as PACTState
+    const parsed = JSON.parse(readFileSync(f, 'utf8')) as Partial<PACTState>
+    return { ...emptyState(), ...parsed } as PACTState
   } catch {
-    return { installed: false, threshold: DEFAULT_THRESHOLD, model: DEFAULT_MODEL, sessionsCompressed: 0, avgRatio: 0, tokensSaved: 0 }
+    return emptyState()
   }
 }
 
@@ -120,6 +154,9 @@ async function main() {
   const n = state.sessionsCompressed
   state.avgRatio = ((state.avgRatio ?? 0) * (n - 1) + result.ratio) / n
   state.tokensSaved = (state.tokensSaved ?? 0) + (result.tokens.before - result.tokens.after)
+  const bytesBefore = Buffer.byteLength(conversationHistory, 'utf8')
+  const bytesAfter = Buffer.byteLength(result.pact, 'utf8')
+  state.bytesSaved = (state.bytesSaved ?? 0) + Math.max(0, bytesBefore - bytesAfter)
   saveState(state)
 
   respond({
@@ -202,6 +239,7 @@ export async function installPACT(projectDir: string, opts: InstallOpts): Promis
     sessionsCompressed: 0,
     avgRatio: 0,
     tokensSaved: 0,
+    bytesSaved: 0,
   })
 }
 
@@ -222,5 +260,6 @@ export async function uninstall(projectDir?: string): Promise<void> {
 }
 
 export async function status(projectDir?: string): Promise<StatusResult> {
-  return readState(projectDir ?? process.cwd())
+  const state = readState(projectDir ?? process.cwd())
+  return { ...state, savings: computeSavings(state) }
 }

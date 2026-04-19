@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { compress, decompress } from './compress.js'
-import { installPACT, uninstallPACT, readState } from './install.js'
+import { installPACT, uninstallPACT, readState, computeSavings } from './install.js'
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2)
@@ -77,9 +77,10 @@ async function main(): Promise<void> {
 
     case 'status': {
       const state = readState(process.cwd())
+      const savings = computeSavings(state)
       const jsonFlag = args.includes('--json')
       if (jsonFlag) {
-        process.stdout.write(JSON.stringify(state) + '\n')
+        process.stdout.write(JSON.stringify({ ...state, savings }) + '\n')
         break
       }
       if (!state.installed) {
@@ -87,13 +88,83 @@ async function main(): Promise<void> {
         console.log("Run 'pact-cc install' to get started.")
         break
       }
+      const kb = savings.bytesSaved / 1024
+      const mb = kb / 1024
+      const size = mb >= 1 ? `${mb.toFixed(2)} MB` : `${kb.toFixed(1)} KB`
       console.log('PACT status:')
-      console.log(`  installed:          yes`)
-      console.log(`  threshold:          ${Math.round(state.threshold * 100)}%`)
-      console.log(`  model:              ${state.model}`)
+      console.log(`  installed:           yes`)
+      console.log(`  threshold:           ${Math.round(state.threshold * 100)}%`)
+      console.log(`  model:               ${state.model}`)
       console.log(`  sessions compressed: ${state.sessionsCompressed}`)
-      console.log(`  avg ratio:          ${state.avgRatio.toFixed(1)}x`)
-      console.log(`  tokens saved:       ${state.tokensSaved.toLocaleString()}`)
+      console.log(`  avg ratio:           ${state.avgRatio.toFixed(1)}x`)
+      console.log('  ─── savings ───')
+      console.log(`  tokens saved:        ${savings.tokensSaved.toLocaleString()}`)
+      console.log(`  bytes saved:         ${size} (${savings.bytesSaved.toLocaleString()} B)`)
+      console.log(`  usd saved:           $${savings.usdSaved.toFixed(4)}  (@ $${savings.pricePerMTokens.toFixed(2)}/1M tokens)`)
+      break
+    }
+
+    case 'savings': {
+      // pact-cc savings [--before <file>] [--after <file>] [--price 3.0]
+      // Prints tokens/bytes/usd saved for any before/after pair. If no args,
+      // reads cumulative savings from this project's state.json.
+      const beforeFile = getFlag(args, '--before')
+      const afterFile = getFlag(args, '--after')
+      const jsonFlag = args.includes('--json')
+      const priceFlag = getFlag(args, '--price')
+      const price = priceFlag ? Number(priceFlag) : (process.env.PACT_PRICE_PER_MTOKENS ? Number(process.env.PACT_PRICE_PER_MTOKENS) : 3.0)
+
+      if (beforeFile && afterFile) {
+        const beforeText = readFileSync(beforeFile, 'utf8')
+        const afterText = readFileSync(afterFile, 'utf8')
+        const bytesBefore = Buffer.byteLength(beforeText, 'utf8')
+        const bytesAfter = Buffer.byteLength(afterText, 'utf8')
+        const bpe = (s: string) => Math.ceil(s.length / 4)
+        const tokensBefore = bpe(beforeText)
+        const tokensAfter = bpe(afterText)
+        const tokensSaved = tokensBefore - tokensAfter
+        const bytesSaved = bytesBefore - bytesAfter
+        const usdSaved = (tokensSaved / 1_000_000) * price
+        const ratio = tokensAfter === 0 ? 0 : tokensBefore / tokensAfter
+        const result = {
+          before: { bytes: bytesBefore, tokens: tokensBefore },
+          after: { bytes: bytesAfter, tokens: tokensAfter },
+          saved: { bytes: bytesSaved, tokens: tokensSaved, usd: usdSaved },
+          ratio,
+          pricePerMTokens: price,
+        }
+        if (jsonFlag) { process.stdout.write(JSON.stringify(result) + '\n'); break }
+        const kb = Math.abs(bytesSaved) / 1024
+        const mb = kb / 1024
+        const sizeStr = mb >= 1 ? `${mb.toFixed(2)} MB` : `${kb.toFixed(1)} KB`
+        console.log('PACT savings (ad-hoc):')
+        console.log(`  before: ${bytesBefore.toLocaleString()} B · ${tokensBefore.toLocaleString()} tokens`)
+        console.log(`  after:  ${bytesAfter.toLocaleString()} B · ${tokensAfter.toLocaleString()} tokens`)
+        console.log(`  ratio:  ${ratio.toFixed(2)}x`)
+        console.log('  ─── saved ───')
+        console.log(`  tokens: ${tokensSaved.toLocaleString()}`)
+        console.log(`  bytes:  ${sizeStr} (${bytesSaved.toLocaleString()} B)`)
+        console.log(`  usd:    $${usdSaved.toFixed(4)}  (@ $${price.toFixed(2)}/1M tokens)`)
+        break
+      }
+
+      const state = readState(process.cwd())
+      const savings = computeSavings(state)
+      if (jsonFlag) { process.stdout.write(JSON.stringify({ ...state, savings }) + '\n'); break }
+      if (!state.installed) {
+        console.log('PACT not installed in this project — no cumulative state.')
+        console.log('For ad-hoc savings: pact-cc savings --before <file> --after <file>')
+        break
+      }
+      const kb = savings.bytesSaved / 1024
+      const mb = kb / 1024
+      const size = mb >= 1 ? `${mb.toFixed(2)} MB` : `${kb.toFixed(1)} KB`
+      console.log('PACT cumulative savings:')
+      console.log(`  sessions compressed: ${state.sessionsCompressed}`)
+      console.log(`  avg ratio:           ${state.avgRatio.toFixed(1)}x`)
+      console.log(`  tokens saved:        ${savings.tokensSaved.toLocaleString()}`)
+      console.log(`  bytes saved:         ${size} (${savings.bytesSaved.toLocaleString()} B)`)
+      console.log(`  usd saved:           $${savings.usdSaved.toFixed(4)}  (@ $${savings.pricePerMTokens.toFixed(2)}/1M tokens)`)
       break
     }
 
@@ -129,6 +200,7 @@ async function main(): Promise<void> {
       console.log('  compress   [text] [--stats]')
       console.log('  decompress [pact-code]')
       console.log('  status')
+      console.log('  savings    [--before file --after file] [--price 3.0] [--json]')
       console.log('  benchmark  [--tasks N] [--output path]')
     }
   }
