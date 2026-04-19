@@ -1,0 +1,30 @@
+{
+  "id": "007-api-integration",
+  "category": "feature",
+  "description": "Integrate Stripe billing with subscription tiers, webhooks, and usage metering",
+  "system_context": "SaaS app needs billing. Tech stack: Next.js 14, TypeScript, tRPC, Prisma, PostgreSQL. Integrating Stripe with 3 tiers (Free, Pro $29/mo, Team $99/mo/seat), webhook handling, usage metering for API calls, customer portal. 45 existing tests. Stripe test keys already in .env.",
+  "turns": [
+    "Installed dependencies: npm install stripe @stripe/stripe-js. Stripe SDK v14.x. Created src/server/stripe.ts with new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' }). Typed singleton with env validation at startup.",
+    "Created Stripe products in dashboard. Products: Pro (price_1QXyz... $29/mo recurring), Team (price_1QXyw... $99/mo/seat recurring with usage-based component for API calls over quota). Stored price IDs in .env as STRIPE_PRICE_PRO and STRIPE_PRICE_TEAM.",
+    "Updated Prisma schema. Added to User: stripeCustomerId (String? unique), stripeSubscriptionId (String? unique), subscriptionStatus (enum: trial, active, past_due, canceled, none), subscriptionTier (enum: free, pro, team). Added model Subscription with full Stripe mirror (status, current_period_end, cancel_at_period_end). Ran migration.",
+    "Built checkout flow. src/server/api/billing.ts — tRPC router. Mutation createCheckoutSession(priceId): creates stripe.checkout.sessions with mode=subscription, client_reference_id=userId, success_url, cancel_url, allow_promotion_codes. Returns session URL. 78 lines. 6 tests (with Stripe mocks).",
+    "Built customer portal access. Mutation createPortalSession(): creates stripe.billingPortal.sessions for user's stripeCustomerId. Returns portal URL. 22 lines. 3 tests.",
+    "Webhook endpoint at src/pages/api/webhooks/stripe.ts. Uses raw body (disabled Next.js body parser). Validates signature with stripe.webhooks.constructEvent and STRIPE_WEBHOOK_SECRET. Handles 8 event types: checkout.session.completed, customer.subscription.updated, customer.subscription.deleted, invoice.payment_succeeded, invoice.payment_failed, customer.subscription.trial_will_end, customer.updated, customer.deleted. 187 lines.",
+    "Wrote webhook tests. src/pages/api/webhooks/__tests__/stripe.test.ts. 14 tests. Each test constructs a real Stripe event payload, signs it with stripe.webhooks.generateTestHeaderString, posts to the endpoint, verifies DB state changes. All 14 pass.",
+    "Idempotency. Added webhook_events table (Prisma). Stores stripe event ID as unique key. Before processing, INSERT ... ON CONFLICT DO NOTHING. If conflict, skip processing (already handled). 3 tests verify idempotency.",
+    "Subscription sync. Webhook handler updates User.subscriptionStatus, User.subscriptionTier, User.stripeSubscriptionId on every event. Tested the full lifecycle: subscribe → paid → update → cancel. Local testing with stripe trigger commands.",
+    "Usage metering for API calls. Team tier has 100k API calls included, $0.001 per call over. Created src/server/usage.ts — tracks api_calls in Redis by user_id, period. Nightly cron (Upstash QStash) rolls up daily totals to Postgres usage_records table. 112 lines.",
+    "On invoice.created webhook, push usage to Stripe: stripe.subscriptionItems.createUsageRecord with quantity=excess_calls. 34 lines added to webhook handler. 4 tests covering under-quota, at-quota, over-quota scenarios.",
+    "Built src/middleware/subscription-gate.ts. tRPC middleware checks user.subscriptionTier against route.requiredTier. If insufficient, throws TRPCError UPGRADE_REQUIRED with upgradeUrl. Applied to all Pro/Team-only procedures. 56 lines. 9 tests.",
+    "Built pricing page at src/pages/pricing.tsx. Three cards (Free, Pro, Team). For each tier: bullet list of features, checkout button (disabled if already on that tier). Checkout button calls createCheckoutSession and redirects. 167 lines TSX. Mobile-responsive.",
+    "Built billing page at src/pages/settings/billing.tsx. Shows current plan, next billing date, usage meter (X / 100k API calls), button to open Stripe customer portal. 134 lines. 5 tests.",
+    "Edge case: trial_will_end webhook (3 days before trial ends). Sends email via Resend with upgrade link. Stored in email_sent table to prevent duplicate sends. 4 tests.",
+    "Edge case: past_due webhook. Marks user subscriptionStatus=past_due but doesn't lock features (grace period). After 14 days past_due → Stripe cancels → subscription.deleted webhook → downgrade to free tier. Tested with stripe clock advance.",
+    "Webhook retry handling. Stripe retries failed webhooks with exponential backoff. If our handler fails (DB down etc), we return 500 and Stripe retries. On successful retry, idempotency check prevents double-processing. Tested manually.",
+    "Local webhook testing. Set up stripe listen --forward-to localhost:3000/api/webhooks/stripe. stripe trigger customer.subscription.created, stripe trigger invoice.payment_failed, etc. All events processed correctly.",
+    "End-to-end test. Created test user, went through checkout flow, became Pro, used a Pro-only feature (worked), opened customer portal, canceled, waited for period end via stripe clock, subscription ended, Pro features locked out. Full flow works.",
+    "Final test suite: 98/98 passing (45 existing + 53 new billing tests). All Stripe flows verified. Ready for staging deploy."
+  ],
+  "expected_contains": "98/98",
+  "max_turns": 28
+}

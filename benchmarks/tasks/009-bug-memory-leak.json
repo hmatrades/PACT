@@ -1,0 +1,26 @@
+{
+  "id": "009-bug-memory-leak",
+  "category": "debug",
+  "description": "Track down memory leak in long-running Node.js worker that OOMs after 6 hours",
+  "system_context": "Node.js background worker processing video transcoding jobs. Tech stack: Node 20, TypeScript, BullMQ, Redis, FFmpeg spawned as child_process. Worker OOMs (heap exhausted) after ~6 hours of continuous processing. Restarts drop jobs. 34 files in src/. 76 existing tests. Heap size: 2GB.",
+  "turns": [
+    "Started by reading logs. Worker restarts show 'JavaScript heap out of memory' then 'FATAL ERROR: Reached heap limit Allocation failed'. Heap ramps from 180MB on start to 2GB over ~5.5 hours, processing ~340 jobs/hour.",
+    "Added --inspect and heap snapshots. node --inspect --max-old-space-size=2048 dist/worker.js. Connected Chrome DevTools. Took heap snapshots at start, +1h, +2h, +3h. Compared.",
+    "Heap snapshot diff shows: string objects growing linearly (+4.2MB/hour), ArrayBuffer growing (+18MB/hour), (closure) objects accumulating. The ArrayBuffers all trace back to src/processors/frame-extractor.ts.",
+    "Read src/processors/frame-extractor.ts. Uses sharp to extract frames from video. Line 87: creates Sharp instance per frame, doesn't call .destroy(). Line 102: keeps frame buffers in a memo Map indexed by frame number — Map is at module scope, never cleared.",
+    "Fixed Sharp instance leak. Wrapped sharp calls in try/finally with instance.destroy(). 12 lines. Fixed the memo Map — moved to per-job scope instead of module scope. Map gets garbage collected when job completes. 23 lines changed.",
+    "Re-ran profile. Sharp ArrayBuffers no longer accumulate. But string objects still growing. Deep-dive into retained strings. They're large (avg 2.3kb), contain base64-ish data. Trace: src/logger/transport.ts.",
+    "Read src/logger/transport.ts. Custom logger that buffers log lines in memory before flushing to S3 every 60 seconds. Bug at line 54: flush interval was changed to 600 seconds during a prod incident last month and never reverted. Buffer grows unbounded. Fixed to 60s. 1 line change.",
+    "Also noticed the logger doesn't cap buffer size. Added hard cap at 10,000 entries — if exceeded, drops oldest entries with a warning log. Prevents unbounded growth even if flush fails. 18 lines. 3 tests.",
+    "Re-ran profile. String growth stopped. But (closure) objects still growing. These are heap-retained function closures. Used clinic.js heapprofiler to trace.",
+    "Closures trace to src/queue/handlers.ts line 78. Every job registers a setInterval to log progress every 5 seconds. Handler returns on job complete but the interval is never cleared. So every completed job leaves a live interval logging to a dead callback that still holds references to the job's data.",
+    "Fix: wrapped in try/finally with clearInterval(intervalId). Verified interval count stable across jobs (used setInterval-no-more lint rule to catch this class of bug in the future).",
+    "Re-ran 4-hour load test. Heap grew from 180MB to 220MB over 4 hours (normal GC sawtooth). Then stable. No more OOM.",
+    "Ran for 12 hours continuously in staging. Processed 4,128 jobs. Heap peak 287MB. No crashes. No errors. Memory leak fully fixed.",
+    "Added regression tests. src/processors/__tests__/frame-extractor.memory.test.ts — runs 1000 iterations, asserts heap growth under 20MB using process.memoryUsage(). 4 tests, one per leak source.",
+    "Added CI job memory-test.yml that runs the memory tests in Docker with --max-old-space-size=512. Forces OOM if a regression is introduced. Runs on every PR.",
+    "Full test suite: 87/87 passing (76 existing + 11 new memory tests). Deployed to production. Memory gauge in Grafana now shows stable sawtooth pattern vs previous linear ramp-and-crash. Pagers quiet."
+  ],
+  "expected_contains": "87/87",
+  "max_turns": 22
+}

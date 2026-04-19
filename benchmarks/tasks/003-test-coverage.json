@@ -1,0 +1,23 @@
+{
+  "id": "003-test-coverage",
+  "category": "test-gen",
+  "description": "Add test coverage for untested payment module",
+  "system_context": "SaaS application with a payment module that has 0% test coverage. Stack: TypeScript, Express, Stripe SDK, PostgreSQL. The payment module handles subscription creation, webhook processing, and invoice management. It was written 6 months ago and never tested. Coverage requirement: reach 80% before the next release.",
+  "turns": [
+    "Starting test coverage for the payment module. Running coverage report: src/payments/ has 0% coverage across 8 files: payment.service.ts (234 lines), webhook.handler.ts (189 lines), subscription.service.ts (156 lines), invoice.service.ts (98 lines), stripe.client.ts (67 lines), payment.controller.ts (123 lines), subscription.controller.ts (89 lines), invoice.controller.ts (56 lines).",
+    "Read src/payments/stripe.client.ts. It wraps the Stripe SDK. Exports a singleton stripeClient. The key insight is that all payment operations go through this client. For tests, I need to mock this module. Will use jest.mock('../stripe.client') pattern.",
+    "Read src/payments/payment.service.ts. It has 6 public methods: createPaymentIntent, confirmPayment, refundPayment, getPaymentHistory, createCustomer, attachPaymentMethod. The createPaymentIntent calls stripe.paymentIntents.create. Most methods do a Stripe API call then write to the database via Prisma.",
+    "Created src/payments/__tests__/payment.service.test.ts. Mocked both stripeClient and PrismaClient. Writing tests for createPaymentIntent: happy path creates intent and saves to DB, handles Stripe errors by throwing PaymentError, validates amount is positive integer.",
+    "Added tests for confirmPayment (4 tests), refundPayment (3 tests), getPaymentHistory (2 tests), createCustomer (3 tests), attachPaymentMethod (2 tests). Total: 19 tests for payment.service.ts. All passing.",
+    "Read src/payments/webhook.handler.ts. This is the complex one. It handles 8 different Stripe webhook event types: payment_intent.succeeded, payment_intent.payment_failed, customer.subscription.created, customer.subscription.deleted, customer.subscription.updated, invoice.paid, invoice.payment_failed, charge.refunded. Each has different logic.",
+    "Created src/payments/__tests__/webhook.handler.test.ts. The key challenge is constructing valid Stripe webhook event objects for each type. Used Stripe's constructEvent mock. Writing tests for each event type.",
+    "Added 8 tests for webhook event handling, one per event type. The payment_intent.succeeded test was tricky - it updates the payment record in DB and sends a confirmation email via the notification service. Had to mock notificationService.sendPaymentConfirmation. All 8 passing.",
+    "Read src/payments/subscription.service.ts. Has 5 methods: createSubscription, cancelSubscription, upgradeSubscription, downgradeSubscription, getSubscriptionStatus. Complex business logic in upgrade/downgrade involving proration calculations.",
+    "Created src/payments/__tests__/subscription.service.test.ts. 15 tests covering all 5 methods including edge cases: cancel at period end vs immediately, upgrade mid-cycle proration, downgrade pending next cycle. All 15 passing.",
+    "Read src/payments/invoice.service.ts. 3 methods: getInvoiceList, getInvoiceById, downloadInvoicePDF. The downloadInvoicePDF calls Stripe's invoice.retrieve and then fetches the hosted_invoice_url. Created 6 tests. All passing.",
+    "Running full coverage report for src/payments/: payment.service.ts 94%, webhook.handler.ts 88%, subscription.service.ts 91%, invoice.service.ts 100%, stripe.client.ts 72%, payment.controller.ts 78%, subscription.controller.ts 82%, invoice.controller.ts 89%. Overall: 87% coverage. Target was 80%. Exceeded.",
+    "Final count: 48 new tests added. All 48 passing. Coverage went from 0% to 87%. Committed: test: add payment module test coverage (87%, 48 tests)."
+  ],
+  "expected_contains": "48 new tests",
+  "max_turns": 20
+}

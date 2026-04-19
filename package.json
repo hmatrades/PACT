@@ -28,7 +28,7 @@
     "test:engine": "node --experimental-vm-modules --test src/engine.test.ts",
     "test": "node --experimental-vm-modules --test src/**/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "benchmark": "node dist/cli.js benchmark"
+    "benchmark": "node benchmarks/run.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0"

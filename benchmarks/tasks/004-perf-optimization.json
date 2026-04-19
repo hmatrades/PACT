@@ -1,0 +1,24 @@
+{
+  "id": "004-perf-optimization",
+  "category": "perf",
+  "description": "Optimize slow dashboard query reducing p99 from 4.2s to under 300ms",
+  "system_context": "Rails analytics dashboard for SaaS metrics. Tech stack: Ruby 3.3, Rails 7.1, PostgreSQL 16, Redis. Main dashboard query at app/queries/metrics_query.rb takes 4.2s at p99 on accounts with 100k+ events. Users complaining. Need to get under 300ms without changing the API contract.",
+  "turns": [
+    "Profiled the query with rack-mini-profiler in dev. The MetricsQuery#call method does 4 separate queries: aggregate events by day, by event_type, by user, by source. Each full table scan on events table.",
+    "Explained each query. EXPLAIN ANALYZE on the by-day aggregation shows Seq Scan on events (cost=0..147832 rows=1042083). No index on (account_id, created_at). That's the root issue — we filter by account_id and group by date but no index supports it.",
+    "Checked existing indexes on events. \\d events in psql shows indexes on id, account_id alone, user_id alone, created_at alone. No composite index. The planner can't use two single-column indexes effectively for this query.",
+    "Plan: 1) Add composite index (account_id, created_at, event_type) to support the aggregations. 2) Rewrite 4 queries as single query using FILTER clause to avoid 4 passes. 3) Consider materialized view for accounts with >500k events.",
+    "Created db/migrate/20260419_add_composite_index_to_events.rb. CREATE INDEX CONCURRENTLY idx_events_account_time_type ON events (account_id, created_at, event_type). Added matching index on (account_id, created_at, user_id). Migration is safe for production — uses CONCURRENTLY, doesn't lock.",
+    "Ran migration on staging. Index creation took 38 seconds on 10M row events table. EXPLAIN ANALYZE on by-day aggregation now: Index Scan on idx_events_account_time_type, cost=0..1847, actual time 8ms. Down from 1.1s.",
+    "Rewrote app/queries/metrics_query.rb. Single query using aggregation with FILTER clauses: COUNT(*) FILTER (WHERE event_type='pageview'), COUNT(*) FILTER (WHERE event_type='signup'), etc. And GROUPING SETS to get day/type/user/source rollups in one pass. 142 lines (was 203).",
+    "Tested rewrite on dev. Same results as before (compared output JSON line by line). Total query time: 89ms. Down from 4.2s. Rack-mini-profiler shows a single DB call instead of 4.",
+    "Added spec/queries/metrics_query_spec.rb tests. 14 tests covering: single event type, multiple types, date ranges, empty results, single user, single source, cross-account isolation, timezone handling. All 14 pass.",
+    "Considered materialized view for very large accounts. After rewrite, even accounts with 2M events complete in 340ms. Materialized view adds cache invalidation complexity. Decided against — p99 target met without it.",
+    "Added cache layer via Rails.cache.fetch with 60s TTL. Key includes account_id, start_date, end_date. Sliding window: on fresh query, writes result. On repeat query within 60s, serves from cache in <5ms. 23 lines added.",
+    "Measured on staging with load test (100 req/s for 5 min using k6). p50: 42ms, p95: 180ms, p99: 267ms. Target of <300ms met. Memory usage stable. Redis cache hit rate: 73%.",
+    "Ran full test suite: 1847/1847 passing. Deployed to production behind feature flag perf_dashboard_v2. Enabled for 10% of accounts. Monitored for 1 hour — no errors, p99 went from 4.2s to 248ms on the 10% cohort.",
+    "Gradually rolled out to 100%. Final p99 production: 231ms. CPU on DB reduced 40% due to index usage and single-query rewrite. Users stopped complaining. Shipped."
+  ],
+  "expected_contains": "1847/1847",
+  "max_turns": 22
+}

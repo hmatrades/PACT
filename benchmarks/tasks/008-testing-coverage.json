@@ -1,0 +1,27 @@
+{
+  "id": "008-testing-coverage",
+  "category": "test",
+  "description": "Increase test coverage from 42% to 80% on a legacy Python codebase",
+  "system_context": "Legacy Django application, 6 years old. Tech stack: Python 3.11, Django 4.2, pytest, pytest-django, coverage.py. Current coverage: 42%. Target: 80%. 312 Python files in apps/. 487 existing tests, mostly in apps/core/ and apps/api/. Tests missing for apps/billing/, apps/reports/, apps/admin_tools/, apps/integrations/.",
+  "turns": [
+    "Ran coverage report: coverage run -m pytest && coverage report. Overall 42%. Per-module: core 89%, api 76%, billing 12%, reports 8%, admin_tools 3%, integrations 18%. Clear targets.",
+    "Started with apps/billing/. Read apps/billing/services.py — 347 lines. Key functions: calculate_invoice, apply_discount, handle_refund, generate_receipt. No tests. Wrote apps/billing/tests/test_services.py.",
+    "test_services.py covers calculate_invoice with 9 test cases: zero line items, single item, multiple items, tax-exempt, international tax, with discount, with credit, currency conversion, invalid currency. Used pytest.parametrize. 187 lines. All 9 pass.",
+    "Continued billing tests. apply_discount: 7 cases (percent, fixed, expired, invalid code, stackable, non-stackable, above-max). handle_refund: 6 cases (full, partial, invalid amount, already refunded, stripe failure, bank transfer). generate_receipt: 4 cases (PDF generation, email send, localization, error). 34 more tests.",
+    "billing coverage now 71%. Remaining gaps: payment_method_handler.py (edge cases for expired cards) and subscription_state_machine.py (state transitions). Added 18 more tests. billing at 84%.",
+    "Moved to apps/reports/. Biggest file: apps/reports/generator.py — 892 lines. Builds PDF and Excel reports. Wrote apps/reports/tests/test_generator.py with 23 tests. Covered: each chart type (bar, line, pie, scatter), date ranges, timezone handling, empty data, large datasets (10k rows), permission checks, template selection.",
+    "apps/reports/views.py — the views were partially tested but missing coverage on error paths. Added 14 tests for 400/403/404/500 paths. Uses RequestFactory and real User fixtures.",
+    "reports at 82%. Moved to apps/admin_tools/. This module was admin-only so skipped in previous test pushes. apps/admin_tools/management/commands/ has 8 management commands. Wrote apps/admin_tools/tests/test_commands.py with 16 tests using call_command. Covers: migrate_legacy_users, reconcile_balances, export_tenant, delete_inactive_users, audit_log, regenerate_thumbnails, rotate_api_keys, cleanup_orphaned_files. Each with happy path + 1 error case.",
+    "admin_tools at 79%. Added 6 more tests for apps/admin_tools/views.py (staff-only dashboard). Now 88%.",
+    "apps/integrations/. Handles Slack, Discord, GitHub webhooks. Wrote apps/integrations/tests/test_slack.py with 11 tests mocking slack_sdk.WebClient. Covers: post_message, update_message, file_upload, rate limit handling, invalid token, channel not found.",
+    "apps/integrations/tests/test_discord.py — 9 tests. apps/integrations/tests/test_github.py — 14 tests including webhook signature validation, rate limits, pagination, GraphQL query handling. All use responses library to mock HTTP.",
+    "integrations at 81%. Ran full coverage: 78% overall. Almost there. Drilled into per-file to find biggest gaps. apps/core/tasks.py at 61% — Celery tasks. Wrote apps/core/tests/test_tasks.py with 12 tasks tests using CELERY_TASK_ALWAYS_EAGER.",
+    "apps/api/pagination.py at 45%. Wrote 7 tests covering edge cases: empty results, last page, invalid page number, page_size > max, custom cursor. All pass.",
+    "Ran coverage again: 82%. Passed the 80% target. Ran full test suite: 779/779 passing (487 existing + 292 new tests).",
+    "Added to .github/workflows/test.yml: coverage run + coverage report --fail-under=80. Will block PRs that drop coverage below 80%. Also added coverage XML upload to Codecov for diff coverage in PR comments.",
+    "Refactored test fixtures. Noticed apps/billing/tests/ and apps/reports/tests/ were creating similar User/Tenant fixtures. Extracted to conftest.py at project root. 45 lines. Updated 23 test files to use the shared fixtures.",
+    "Final coverage report: 82.4% overall. core 91%, api 84%, billing 84%, reports 82%, admin_tools 88%, integrations 81%. Per-line HTML coverage report generated. All tests pass in 78 seconds locally, 2m15s in CI."
+  ],
+  "expected_contains": "779/779",
+  "max_turns": 25
+}

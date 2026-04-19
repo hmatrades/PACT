@@ -21,7 +21,7 @@ const { tokenize } = require('../pact-engine.js')
 // Baseline: all turns concatenated (no compression)
 // PACT: compress when cumulative tokens > threshold, carry compressed + new turns
 
-const THRESHOLD_TOKENS = 8000 // simulate 80% of 10k context
+const THRESHOLD_TOKENS = 400 // simulate 80% of 500-token context window (scaled for task sizes)
 
 function countTokens(text) {
   return tokenize(text).length
@@ -56,13 +56,15 @@ function heuristicCompress(text) {
 }
 
 async function simulateBaseline(task) {
-  // Baseline: just concatenate all turns — no compression
+  // Baseline: accumulate context per turn — models pay for total context on every call
   let fullContext = task.system_context + '\n'
+  let totalTokens = 0
   for (const turn of task.turns) {
     fullContext += turn + '\n'
+    totalTokens += countTokens(fullContext)
   }
   return {
-    totalTokens: countTokens(fullContext),
+    totalTokens,
     completed: task.turns.some(t => t.includes(task.expected_contains)),
   }
 }

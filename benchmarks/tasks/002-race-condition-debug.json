@@ -1,0 +1,23 @@
+{
+  "id": "002-race-condition-debug",
+  "category": "debug",
+  "description": "Debug intermittent race condition in payment webhook handler",
+  "system_context": "Node.js payment service processing Stripe webhooks. Tech stack: TypeScript, Express 4, PostgreSQL, Redis, BullMQ. Webhook handler at src/webhooks/stripe.ts processes payment.succeeded events. 0.3% of events produce duplicate order records. Issue only reproduces under load. 23 files in src/webhooks/ and src/services/.",
+  "turns": [
+    "Started investigation by reading src/webhooks/stripe.ts. Handler receives event, validates signature, calls processPayment() in src/services/payment.ts. At line 67 there's a check for existing order by stripe_event_id. If not found, creates new order at line 73.",
+    "Read src/services/payment.ts. The findOrderByEventId at line 34 queries Postgres. createOrder at line 89 inserts into orders table with stripe_event_id as unique column. But the check-then-insert pattern is not atomic — two simultaneous webhook deliveries can both pass the existence check before either inserts.",
+    "Confirmed hypothesis. Grepped for stripe_event_id in migrations/. Found 2024_03_add_orders.sql at line 14: stripe_event_id has UNIQUE constraint but the code does find-then-insert instead of relying on the constraint. Second insert throws 23505 unique_violation but error is caught and logged as warning, then handler returns 200 to Stripe, which triggers Stripe's retry after timeout.",
+    "Wait — reviewed error handling in src/webhooks/stripe.ts line 112. The catch block logs error.message but doesn't distinguish 23505 from real errors. However the handler still returns 200 — so Stripe shouldn't retry. Let me trace duplicates more carefully.",
+    "Queried production db for duplicate stripe_event_ids: SELECT stripe_event_id, COUNT(*) FROM orders GROUP BY 1 HAVING COUNT(*) > 1. Got 47 rows. The duplicates have different order IDs but identical stripe_event_id. This means the UNIQUE constraint is NOT actually being enforced.",
+    "Checked the migration again. Line 14: stripe_event_id VARCHAR(255). No UNIQUE keyword. The constraint was never created. Separate migration 2024_05_indexes.sql attempted CREATE UNIQUE INDEX CONCURRENTLY but it failed because duplicates already existed and no one noticed the migration error.",
+    "Fix plan: 1) Add idempotency via Redis SETNX lock on stripe_event_id before processing. 2) Clean up existing duplicates. 3) Re-run the unique index migration. Started with Redis lock.",
+    "Updated src/webhooks/stripe.ts. Added acquireLock(eventId, 30s) before processPayment call. Uses Redis SET NX EX. If lock fails, returns 200 immediately (event is being processed by another worker). Implemented in src/services/lock.ts — 34 lines. Added 6 tests in src/services/__tests__/lock.test.ts. All pass.",
+    "Wrote cleanup script scripts/dedupe-orders.ts. For each stripe_event_id with duplicates, keeps oldest order (by created_at), soft-deletes others. Ran on staging — removed 47 duplicates. Spot-checked 5 to confirm we kept the right one.",
+    "Re-ran unique index migration. Failed again — production has 47 duplicates still. Right, the cleanup only ran on staging. Ran cleanup on production. Confirmed zero duplicates. Re-ran CREATE UNIQUE INDEX CONCURRENTLY. Success.",
+    "Added integration test src/webhooks/__tests__/stripe-concurrency.test.ts. Simulates 10 concurrent webhook deliveries for same event_id. Asserts exactly 1 order created. Test passes with new lock, fails without it (verified by temporarily removing the lock).",
+    "Full test suite: 287/287 tests passing. Deployed to staging. Replayed last 1000 production webhook events — zero duplicates. Rolling out to production behind feature flag webhook_idempotency_v2.",
+    "Monitored production for 2 hours after rollout. Lock acquisition rate: 99.7%. The 0.3% failures are expected — they're the duplicate delivery attempts that now correctly short-circuit. Zero new duplicate orders created. Fix confirmed complete."
+  ],
+  "expected_contains": "287/287",
+  "max_turns": 20
+}

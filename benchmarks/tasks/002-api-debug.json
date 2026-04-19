@@ -1,0 +1,23 @@
+{
+  "id": "002-api-debug",
+  "category": "debug",
+  "description": "Debug POST /users returning 500 in production",
+  "system_context": "Node.js REST API running in production on AWS Lambda. Stack: TypeScript, Express, Prisma ORM, PostgreSQL RDS. Error rate on POST /users spiked to 34% overnight. CloudWatch logs show 500 errors but stack traces are not captured. The endpoint creates new user accounts. Local development works fine.",
+  "turns": [
+    "Started investigating the POST /users 500 errors. Read the CloudWatch logs - errors started at 02:14 AM UTC. The log message is just 'Internal server error' with no stack trace. This means the error is being swallowed somewhere in the error handler.",
+    "Read src/api/users.ts. The POST handler calls userService.createUser(body). Read src/services/user.service.ts. The createUser method calls prisma.user.create(). There is a try/catch but it only logs to console.error and re-throws. The error handler in src/middleware/error.ts catches it and returns 500 without the stack trace in production.",
+    "Checked src/middleware/error.ts. In production mode, it returns { error: 'Internal server error' } without any detail. This is correct for security but makes debugging impossible. Need to add error tracking. But first need to find the actual error.",
+    "Added temporary detailed logging to src/api/users.ts to capture the full error object and send it to CloudWatch with console.error(JSON.stringify(error)). Deployed to staging which has similar data to production.",
+    "Reproduced the error in staging. The full error is: PrismaClientKnownRequestError: Unique constraint failed on the fields: ('email'). Code: P2002. This is a unique constraint violation on the email field. But why is it happening at 34% rate? Users shouldn't be sending duplicate emails that frequently.",
+    "Investigated the frontend code in the mobile app. Found a bug: the submit button does not disable after first click. Users on slow connections are double-tapping the submit button, sending the same POST /users request twice within milliseconds. The first request succeeds and creates the user. The second request hits the unique constraint.",
+    "Read the database schema in prisma/schema.prisma. The email field has @unique. The Prisma error code P2002 is correct. The fix needs to happen at the API level - we need to handle the unique constraint error gracefully and return a 409 Conflict instead of 500.",
+    "Updated src/services/user.service.ts to catch Prisma errors and rethrow them as typed application errors. Added PrismaClientKnownRequestError check for code P2002 to throw a ConflictError with message 'Email already exists'.",
+    "Updated src/middleware/error.ts to handle ConflictError and return 409 status with { error: 'Email already exists' } response. Updated the error hierarchy in src/errors/index.ts to add ConflictError extending AppError with statusCode 409.",
+    "Added idempotency at the API level: if the same email is submitted within 5 seconds, return the existing user record instead of erroring. Implemented using a simple in-memory cache with TTL. This handles the double-tap case cleanly.",
+    "Wrote tests for the new error handling in src/services/__tests__/user.service.test.ts. Added 4 tests: duplicate email returns 409, unique email succeeds, idempotency returns same user on duplicate within TTL, idempotency creates new user after TTL expires.",
+    "All tests passing. Deployed fix to staging. Tested double-tap scenario: first request creates user, second request within 5 seconds returns same user with 200. Error rate in staging: 0%. Ready to deploy to production.",
+    "Deployed to production. Monitoring CloudWatch. Error rate on POST /users dropped from 34% to 0.1% (the remaining 0.1% are actual duplicate email attempts from different sessions, correctly returning 409). Fix confirmed successful."
+  ],
+  "expected_contains": "Error rate",
+  "max_turns": 20
+}

@@ -1,0 +1,25 @@
+{
+  "id": "001-auth-refactor",
+  "category": "refactor",
+  "description": "Refactor JWT localStorage auth to httpOnly cookies",
+  "system_context": "Large Node.js/Express API. Tech stack: TypeScript, Express 4, PostgreSQL, Jest. The codebase has 47 files in src/. Authentication is currently implemented using JWT tokens stored in localStorage on the client side. Security audit flagged this as a vulnerability. We need to migrate to httpOnly cookies across the entire auth stack without breaking any of the 143 existing tests.",
+  "turns": [
+    "I read the task description and started by exploring the codebase structure. Found src/auth/jwt.ts (156 lines), src/middleware/auth.ts (89 lines), src/api/login.ts (67 lines), src/api/logout.ts (34 lines), src/api/refresh.ts (45 lines). The token generation happens in jwt.ts at line 45. The generateToken function currently returns a string which the login handler sends back as JSON.",
+    "Read src/auth/jwt.ts in detail. The generateToken function at line 45 takes a payload object and signs it with JWT_SECRET from environment. Returns the token string. The refreshToken function at line 78 validates an existing token and generates a new one. Both need to change to set cookies instead of returning strings.",
+    "Read src/middleware/auth.ts. The authenticate middleware reads from the Authorization header using the Bearer scheme. Extracts the token with header.split(' ')[1]. Then calls jwt.verify. This needs to change to read from req.cookies.token instead. Need to add cookie-parser middleware first.",
+    "Read src/api/login.ts. The login handler calls generateToken and returns it in the JSON response body as { token, user }. Clients are expected to store this token in localStorage. This is the security issue. The fix is to set an httpOnly cookie instead.",
+    "Created src/utils/cookies.ts with setCookie(res, token, maxAge), getCookie(req, name), and deleteCookie(res, name) utilities. All use httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict'. 52 lines total.",
+    "Updated src/auth/jwt.ts. generateToken now accepts res: Response as first parameter and calls setCookie internally. Returns void instead of string. refreshToken similarly updated. Had to update the function signatures throughout. The tests in src/auth/__tests__/jwt.test.ts are now failing - they mock the res object but expected a string return value.",
+    "Fixed src/auth/__tests__/jwt.test.ts. 12 tests updated. Changed expectations from checking return value to checking that res.cookie was called with correct arguments. Used jest.fn() mocks for the response object. All 12 jwt tests now pass.",
+    "Updated src/middleware/auth.ts. authenticate middleware now reads req.cookies.token. Installed cookie-parser: ran npm install cookie-parser @types/cookie-parser. Updated src/app.ts to add app.use(cookieParser()) before route registration at line 34. The middleware tests in src/middleware/__tests__/auth.test.ts need updating too.",
+    "Fixed src/middleware/__tests__/auth.test.ts. 8 tests updated to put the token in req.cookies instead of the Authorization header. All 8 pass. Updated src/api/login.ts to not return the token in the response body - now returns { success: true, user }. Updated src/api/logout.ts to call deleteCookie and return { success: true }.",
+    "Updated src/api/refresh.ts. The refresh endpoint previously accepted the old token in the request body. Now reads from req.cookies.token and sets a new cookie. Updated src/api/__tests__/login.test.ts - 6 tests were checking for token in response body. Fixed all 6 to check for success: true and that set-cookie header is present.",
+    "Ran the full test suite: 143 tests. 131 passing, 12 failing. The failures are in src/api/__tests__/refresh.test.ts - they send the old token in the request body but we now read from cookies. Fixing those tests.",
+    "Fixed src/api/__tests__/refresh.test.ts. All 12 tests updated to set the token as a cookie in the test request. Used supertest's .set('Cookie', 'token=...') API. Now running full suite again.",
+    "All 143 tests passing. Refactor complete. The auth system now uses httpOnly cookies throughout. No token is ever exposed to JavaScript. The fix is complete and all tests validate the new behavior.",
+    "Reviewed the changes for anything missed. Checked src/api/__tests__/ for any remaining tests that reference Authorization header for auth. Found 2 more in src/api/__tests__/user.test.ts at lines 34 and 67. Fixed both.",
+    "Final test run: 143/143 passing. Committed the changes with message: refactor: migrate auth from JWT localStorage to httpOnly cookies. Refactor complete."
+  ],
+  "expected_contains": "143 tests",
+  "max_turns": 20
+}

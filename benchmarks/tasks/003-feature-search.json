@@ -1,0 +1,26 @@
+{
+  "id": "003-feature-search",
+  "category": "feature",
+  "description": "Add full-text search to blog platform with ranking and highlighting",
+  "system_context": "Django blog platform. Tech stack: Python 3.11, Django 5, PostgreSQL 16, Redis, Celery. Currently has basic LIKE query search at apps/search/views.py. Need to upgrade to proper full-text search with tsvector, ranking, snippet highlighting, and autocomplete. 87 files across apps/, should not break any of the 203 existing tests.",
+  "turns": [
+    "Surveyed existing search. apps/search/views.py has SearchView that does Post.objects.filter(title__icontains=q). No ranking. No highlighting. Returns up to 20 results sorted by -created_at. The template apps/search/templates/search/results.html renders each with title, excerpt, date.",
+    "Surveyed Post model. apps/blog/models.py line 45: Post has title (CharField 200), slug, body (TextField), author (FK User), tags (M2M Tag), published_at, is_published. No existing tsvector column. 14,732 posts in production.",
+    "Read Django docs on django.contrib.postgres.search. Plan: 1) Add search_vector tsvector column to Post. 2) Migration to backfill + trigger to keep it updated. 3) Update SearchView to use SearchQuery/SearchRank. 4) Add headline for snippet highlighting. 5) Autocomplete endpoint using trigram similarity.",
+    "Created migration apps/blog/migrations/0023_add_search_vector.py. Adds SearchVectorField, GIN index on search_vector, and BRIN index on published_at. Used AddIndex operation. 28 lines.",
+    "Added trigger migration apps/blog/migrations/0024_search_vector_trigger.py. Custom SQL: CREATE TRIGGER posts_search_vector_trigger BEFORE INSERT OR UPDATE ON blog_post FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger(search_vector, 'pg_catalog.english', title, body). 41 lines.",
+    "Migrated models. apps/blog/models.py updated Post: added search_vector = SearchVectorField(null=True). GinIndex(fields=['search_vector']) added to Meta.indexes. Ran makemigrations — squashed into migration 0023. Ran migrate on dev db.",
+    "Wrote backfill command apps/blog/management/commands/backfill_search_vector.py. Iterates posts in batches of 500, updates search_vector using SearchVector('title', weight='A') + SearchVector('body', weight='B'). Ran on dev with 14,732 posts — took 43 seconds.",
+    "Updated apps/search/views.py SearchView. Now uses SearchQuery(q, search_type='websearch'). Annotates with rank=SearchRank(F('search_vector'), query) and headline=SearchHeadline('body', query, max_fragments=3). Orders by -rank. 56 lines.",
+    "Updated apps/search/templates/search/results.html to render headline (contains <b> tags from postgres). Added |safe filter with custom tag bleach_search_html that only allows <b> to prevent XSS. Registered in apps/search/templatetags/search_tags.py.",
+    "Tested search. Query 'django authentication' returns 47 results, top 3 are relevant posts. Snippet highlighting works. Query 'fooobaaaar' returns 0 results (correct). Query with SQL injection attempt 'x; DROP TABLE posts; --' safely returns 0 results — no injection (parameterized).",
+    "Added autocomplete endpoint. apps/search/views.py AutocompleteView. Uses TrigramSimilarity on Post.title. Returns top 8 titles where similarity > 0.3. Rate-limited to 20 req/min per IP via django-ratelimit. 34 lines including rate limit decorator.",
+    "Added search_type=phrase support. When user wraps query in quotes, use SearchQuery(q, search_type='phrase'). Verified: 'exact phrase' only returns posts containing that exact phrase. 12 test cases.",
+    "Wrote apps/search/tests/test_search_view.py — 18 tests covering websearch operators (AND, OR, -excluded), ranking, highlighting, empty queries, unicode, sanitization. All 18 pass.",
+    "Wrote apps/search/tests/test_autocomplete.py — 11 tests covering trigram matching, rate limiting, min query length, result ordering. All 11 pass.",
+    "Benchmarked: old LIKE search on 14k posts averaged 340ms. New full-text search averages 28ms. Autocomplete averages 11ms. GIN index size: 4.2MB. Acceptable.",
+    "Ran full test suite: 232/232 passing (203 existing + 29 new). Feature complete. Deployed to staging for user testing."
+  ],
+  "expected_contains": "232/232",
+  "max_turns": 25
+}

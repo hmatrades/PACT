@@ -1,0 +1,26 @@
+{
+  "id": "005-migration-postgres",
+  "category": "migrate",
+  "description": "Migrate SQLite to PostgreSQL for a Python FastAPI app with zero downtime",
+  "system_context": "FastAPI app running on Fly.io. Tech stack: Python 3.12, FastAPI 0.110, SQLAlchemy 2, Alembic. Currently using SQLite in production (bad — shipped early). 34k users, 2.1M rows total. Need to move to Postgres without downtime. 78 files in app/, 167 tests.",
+  "turns": [
+    "Surveyed current setup. app/db.py has create_engine('sqlite:///app.db'). SQLAlchemy models in app/models/ — User, Post, Comment, Tag, Session, ApiKey. 8 models total. Alembic migrations in migrations/ — 23 existing.",
+    "Checked for SQLite-specific SQL. Grepped for text() usages. Found 3 raw SQL queries that use SQLite syntax: app/queries/stats.py uses strftime('%Y-%m-%d', created_at), app/queries/search.py uses LIKE with case-insensitive (SQLite default), app/search/fts.py uses SQLite FTS5.",
+    "Provisioned Postgres 16 on Fly.io: fly pg create --name myapp-db --region ewr. Attached to app. DATABASE_URL set in secrets. Kept SQLite connection string too as DATABASE_URL_SQLITE for dual-write phase.",
+    "Plan: 1) Abstract DB access behind a DatabaseManager. 2) Dual-write to both DBs. 3) Backfill SQLite → Postgres. 4) Verify consistency. 5) Switch reads to Postgres. 6) Stop writes to SQLite. 7) Drop SQLite. Four-phase rollout with feature flags.",
+    "Created app/db/manager.py DatabaseManager class. Supports primary/secondary write modes. Config via env DB_MODE: sqlite_primary, dual_write, postgres_primary, postgres_only. 124 lines. Added 11 tests — all pass.",
+    "Updated app/db.py to use DatabaseManager. All session handling goes through get_session() which routes based on DB_MODE. Committed and deployed with DB_MODE=sqlite_primary. Zero behavior change — verified with test suite.",
+    "Wrote scripts/migrate_sqlite_to_postgres.py. Reads SQLite tables in FK-safe order (User → Session → Post → Comment → Tag → ApiKey). For each row: insert into Postgres using raw SQL (bypassing ORM for speed). Handles the 3 SQLite-specific queries by translating strftime to TO_CHAR, LIKE to ILIKE. Uses COPY for tables >100k rows.",
+    "Ran backfill against a snapshot of production SQLite. Took 8 minutes for 2.1M rows. Postgres row counts match SQLite exactly. Spot-checked 50 random rows — all identical. Foreign keys valid.",
+    "Created alembic/versions/24_postgres_indexes.py. Adds indexes that SQLite has implicitly but Postgres needs explicit: partial indexes on is_deleted=false, GIN indexes for full-text search columns (replacing FTS5). 67 lines.",
+    "Replaced SQLite FTS5 with Postgres tsvector. Updated app/search/fts.py to use Postgres full-text search with GIN index. 89 lines rewritten. Search behavior tested on 1000 sample queries — 98% match rate (the 2% diff is better Postgres ranking, not a bug).",
+    "Deployed dual_write mode. Every write now goes to both SQLite and Postgres. Reads still from SQLite. Ran for 24 hours. Wrote consistency-check script that compares random table slices hourly — 100% consistent.",
+    "Wrote backfill-reconcile.py. Catches up any rows that were written to SQLite before dual_write was deployed (the migration snapshot was from before). Found 847 rows written during the gap. Backfilled them. Re-ran consistency check — 100%.",
+    "Switched to postgres_primary mode. Reads from Postgres, writes still dual. Monitored latency: p99 read latency 14ms (vs 8ms SQLite — acceptable for the capability). Ran full test suite against new mode: 167/167 pass.",
+    "After 48 hours stable in postgres_primary, switched to postgres_only. Stopped writing to SQLite. Deployment flag-gated so rollback is one env var change.",
+    "Ran final verification. All 34k users can log in. Full-text search works. Stats queries return correct data. Zero errors in Sentry for 24h. Shipped.",
+    "Dropped SQLite dependency. Removed DATABASE_URL_SQLITE secret. Deleted app.db backup from volume after 7 days. Full test suite: 178/178 pass (167 existing + 11 new DatabaseManager tests)."
+  ],
+  "expected_contains": "178/178",
+  "max_turns": 25
+}
