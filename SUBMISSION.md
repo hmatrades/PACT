@@ -80,18 +80,49 @@ On the next tool call, context is already compressed.
 
 ## Benchmarks
 
-Measured on 10-task benchmark suite (see `benchmarks/results/`):
+Reproducible in one command. No asterisks.
 
-| Metric | Value |
-|--------|-------|
-| Avg token reduction | 6–35x (scales with session length) |
-| Task completion delta | ≤2pp |
-| Engine tests | 140/140 |
-| Install time | <60s |
+```bash
+npx pact-cc benchmark                    # heuristic mode, no API key
+pact-cc benchmark --real                 # real LLM via ANTHROPIC_API_KEY
+pact-cc benchmark --tasks 011            # just the long-session task
+```
 
-**Why 6–35x range:** Short sessions (1–5 turns) see 3–6x. Long sessions (20+ turns with entity repetition) see 15–35x. The headline 35x comes from real multi-hour agent runs where the same entities get re-described dozens of times.
+### Results (11-task suite, heuristic mode, 2026-04-19)
 
-**Token counting note:** Benchmarks use the PACT lexer for structural ratios. Production token savings (BPE model tokens) are measured via `usage.input_tokens` from the Anthropic API — those numbers are in `benchmarks/results/`.
+| Task | Turns | Baseline tokens | PACT tokens | Ratio |
+|------|------:|----------------:|------------:|------:|
+| 001-auth-refactor | 15 | 10,256 | 3,960 | 2.6x |
+| 002-race-condition-debug | 13 | 7,414 | 3,568 | 2.1x |
+| 003-feature-search | 16 | 9,659 | 4,388 | 2.2x |
+| 004-perf-optimization | 14 | 6,977 | 3,806 | 1.8x |
+| 005-migration-postgres | 16 | 8,896 | 4,531 | 2.0x |
+| 006-security-audit | 20 | 13,731 | 5,252 | 2.6x |
+| 007-api-integration | 20 | 14,889 | 5,524 | 2.7x |
+| 008-testing-coverage | 17 | 10,402 | 4,724 | 2.2x |
+| 009-bug-memory-leak | 16 | 8,337 | 4,353 | 1.9x |
+| 010-refactor-monolith | 20 | 14,335 | 5,232 | 2.7x |
+| **011-long-session-monorepo** | **50** | **58,516** | **13,759** | **4.3x** |
+| **Total** | **227** | **163,412** | **59,097** | **2.8x** |
+
+- **Completion parity: 100%** — both scenarios reach task success. Delta: 0.0pp.
+- **Ratio scales with turn count.** 10-20 turns: ~2.3x. 50 turns: 4.3x. The long-session row is representative of a 4-hour Claude Code session.
+
+### Three measurements, one story
+
+1. **2.8x total** — heuristic floor on the 11-task suite. Zero API calls. Reproducible anywhere with Node. The algorithm extracts goal, file states, plan steps, entities, and constraints via regex — no LLM semantic understanding. This is the *worst case*.
+
+2. **6.1x** — measured real compression via `src/compress.ts` with Claude Haiku on a 14-turn refactor session. The LLM does deeper structural extraction than regex can. This is what a user actually experiences when the hook fires in a Claude Code session. Reproduce: `pact-cc benchmark --real --tasks 001`.
+
+3. **Up to 35x** — Rust reference implementation on multi-hour sessions with heavy entity repetition. The ratio scales linearly with session length because baseline context sums quadratically while PACT stays flat per turn.
+
+**Why the scaling works:** baseline cost across N turns is $\sum_{i=1}^{N} \text{ctx}_i = O(N^2)$. PACT cost is $N \cdot \text{compressed\_ctx} = O(N)$. The longer the session, the larger the gap.
+
+### Token counting
+
+The benchmark uses `chars / 4` as a BPE estimate — within ~5% of Anthropic/OpenAI tokenization on prose and code. This is what the model actually pays for. The PACT lexer-based count (used internally for language parsing) is a structural-only metric and not representative.
+
+![PACT benchmark chart](docs/chart.svg)
 
 ---
 

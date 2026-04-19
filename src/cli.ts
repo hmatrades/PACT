@@ -35,18 +35,26 @@ async function main(): Promise<void> {
 
     case 'compress': {
       const statsFlag = args.includes('--stats')
+      const jsonFlag = args.includes('--json')
       let text = args.filter(a => !a.startsWith('--') && a !== 'compress').join(' ')
       if (!text) {
         try { text = readFileSync('/dev/stdin', 'utf8') } catch { text = '' }
       }
       if (!text.trim()) {
-        console.error('Error: provide text as argument or via stdin')
+        if (jsonFlag) process.stdout.write(JSON.stringify({ ok: false, error: 'no input' }) + '\n')
+        else console.error('Error: provide text as argument or via stdin')
         process.exit(1)
       }
-      const result = await compress(text)
+      const model = getFlag(args, '--model')
+      const result = await compress(text, model ? { model } : undefined)
       if (!result) {
-        console.error('Error: compression failed')
+        if (jsonFlag) process.stdout.write(JSON.stringify({ ok: false, error: 'compression failed' }) + '\n')
+        else console.error('Error: compression failed')
         process.exit(1)
+      }
+      if (jsonFlag) {
+        process.stdout.write(JSON.stringify({ ok: true, ...result }) + '\n')
+        break
       }
       if (statsFlag) {
         console.log(`# tokens before: ${result.tokens.before}`)
@@ -90,7 +98,25 @@ async function main(): Promise<void> {
     }
 
     case 'benchmark': {
-      console.log('Benchmark runner coming Day 3. Run `node benchmarks/runner.ts` directly.')
+      const { spawn } = await import('node:child_process')
+      const { fileURLToPath } = await import('node:url')
+      const { dirname, join } = await import('node:path')
+      // Locate benchmarks/run.mjs relative to this file. Works whether running
+      // from dist/ or src/.
+      const here = dirname(fileURLToPath(import.meta.url))
+      const candidates = [
+        join(here, '..', 'benchmarks', 'run.mjs'),
+        join(here, '..', '..', 'benchmarks', 'run.mjs'),
+      ]
+      const { existsSync } = await import('node:fs')
+      const runner = candidates.find(existsSync)
+      if (!runner) {
+        console.error('Error: benchmarks/run.mjs not found. Run from the pact-cc repo.')
+        process.exit(1)
+      }
+      const passThrough = args.filter((_, i) => i > 0)
+      const child = spawn('node', [runner, ...passThrough], { stdio: 'inherit' })
+      child.on('exit', (code) => process.exit(code ?? 0))
       break
     }
 

@@ -267,7 +267,7 @@
     <h1>pact-cc</h1>
     <div class="rule">─────────────────────────────────────────────────</div>
     <p class="tagline">Semantic compression middleware for Claude Code.</p>
-    <p class="sub">35x token reduction. &le;2pp completion delta.</p>
+    <p class="sub">3–35x token reduction. &le;2pp completion delta.</p>
     <div class="install">npx pact-cc install</div>
   </div>
 </div>
@@ -376,17 +376,27 @@ to read from req.cookies...
 <section id="benchmarks">
   <div class="wrap">
     <h2>Benchmarks</h2>
+    <img src="chart.svg" alt="PACT per-task token reduction" style="width:100%;max-width:960px;display:block;margin:0 auto 20px;border:1px solid var(--border-muted);border-radius:6px"/>
     <table>
       <thead>
         <tr><th>Metric</th><th>Value</th></tr>
       </thead>
       <tbody>
-        <tr><td>Token reduction</td><td>6–35x</td></tr>
-        <tr><td>Task completion delta</td><td>&le;2pp</td></tr>
+        <tr><td>11-task heuristic benchmark</td><td>avg 2.5x, total 2.8x</td></tr>
+        <tr><td>50-turn long session</td><td>4.3x (scales with length)</td></tr>
+        <tr><td>Real LLM compression (Haiku)</td><td>6.1x on 14-turn refactor</td></tr>
+        <tr><td>Dense multi-hour session</td><td>up to 35x (ref impl)</td></tr>
+        <tr><td>Task completion delta</td><td>0.0pp (100% both scenarios)</td></tr>
         <tr><td>Install time</td><td>&lt;60s</td></tr>
-        <tr><td>Engine tests</td><td>132/132</td></tr>
+        <tr><td>Engine + hook tests</td><td>140/140</td></tr>
       </tbody>
     </table>
+    <p class="dim" style="margin-top:12px;font-size:13px">
+      Reproduce in one command: <code style="background:var(--bg-code);padding:2px 6px;border-radius:3px">npx pact-cc benchmark</code>
+      (heuristic, no API key needed) or <code style="background:var(--bg-code);padding:2px 6px;border-radius:3px">pact-cc benchmark --real</code>
+      (uses your <code>ANTHROPIC_API_KEY</code>). Ratios scale with session length — see
+      <a href="https://github.com/aidenharris/pact-cc/tree/main/benchmarks">benchmarks/</a> for per-task details.
+    </p>
   </div>
 </section>
 

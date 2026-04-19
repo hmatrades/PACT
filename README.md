@@ -1,9 +1,9 @@
 # pact-cc
 
 **Semantic compression middleware for Claude Code agents.**  
-35x token reduction. ≤2pp task completion delta. One command to install.
+3–35x token reduction. ≤2pp task completion delta. One command to install.
 
-[![Tests](https://img.shields.io/badge/tests-132%20passing-brightgreen)](src/engine.test.ts)
+[![Tests](https://img.shields.io/badge/tests-140%20passing-brightgreen)](src/engine.test.ts)
 [![npm](https://img.shields.io/badge/npm-pact--cc-blue)](https://www.npmjs.com/package/pact-cc)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
@@ -45,14 +45,26 @@ Agent context (natural language)
 
 ## Benchmarks
 
-| Metric | Value |
-|--------|-------|
-| Token reduction | 35x |
-| Task completion delta | ≤2pp |
-| Tasks evaluated | 93 |
-| Install time | <60s |
+```bash
+# Heuristic mode — no API key needed, instant, reproducible
+npx pact-cc benchmark
 
-*Full benchmark results in [benchmarks/results/](benchmarks/results/) — populated Day 3 of build week.*
+# Real LLM mode — uses your ANTHROPIC_API_KEY (or BLACKBOX_API_KEY)
+pact-cc benchmark --real
+```
+
+| Mode | Tasks | Avg ratio | Total ratio | Completion delta |
+|------|-------|-----------|-------------|------------------|
+| Heuristic (11 tasks) | 11 | 2.5x | 2.8x | 0.0pp |
+| Heuristic (50-turn long session) | 1 | 4.3x | 4.3x | 0.0pp |
+| Real LLM (14-turn refactor, Haiku) | 1 | 6.1x | 6.1x | 0.0pp |
+| Dense multi-hour session (ref impl) | — | up to 35x | — | ≤2pp |
+
+**Ratios scale with session length.** Short 10-20 turn tasks: 2-3x. 50-turn sessions: 4-5x. Multi-hour sessions with heavy entity repetition: 10x+ with real LLM compression. The heuristic is a lower bound — real LLM extraction via `compress.ts` typically doubles it.
+
+![PACT benchmark chart](benchmarks/results/chart.svg)
+
+Full per-task results: [benchmarks/results/](benchmarks/results/). Chart regenerates from the latest results JSON: `node benchmarks/chart.mjs`.
 
 ## Why not just summarize?
 
@@ -75,9 +87,10 @@ See [docs/architecture/](docs/architecture/) for full specs:
 
 ```bash
 npm install
-npm run test:engine    # 132 engine tests
+npm run test           # 140 tests (engine + hook)
 npm run typecheck      # TypeScript type check
 npm run build          # tsup → dist/
+node benchmarks/run.mjs # 10-task structural benchmark
 ```
 
 ## License

@@ -1,0 +1,30 @@
+{
+  "id": "010-refactor-monolith",
+  "category": "refactor",
+  "description": "Refactor monolithic service.ts god file into domain-driven modules",
+  "system_context": "TypeScript backend for e-commerce app. One file src/service.ts has grown to 4,847 lines handling orders, inventory, pricing, shipping, returns, customer comms. 89 exported functions. 612 test cases across its test file (4,200 lines). Need to split into domain modules without breaking tests or changing external API.",
+  "turns": [
+    "Read src/service.ts. Categorized the 89 functions: 18 order-related (createOrder, updateOrder, cancelOrder, etc), 14 inventory (reserveStock, releaseStock, etc), 11 pricing (calculatePrice, applyDiscount), 9 shipping (getShippingRates, trackPackage), 7 returns (initiateReturn, processRefund), 14 customer (sendEmail, sendSms, getProfile), 16 misc utilities.",
+    "Drew the module boundaries: orders/, inventory/, pricing/, shipping/, returns/, customer/, shared/. Each module exports via a single index.ts. External imports will change from import { createOrder } from './service' to import { createOrder } from './orders'. Maintain barrel export at service.ts for backward compat.",
+    "Identified cross-module dependencies. createOrder calls reserveStock (orders→inventory), calculatePrice (orders→pricing), sendOrderConfirmation (orders→customer). processRefund calls releaseStock, sendRefundEmail. 23 cross-module calls total. Decided: no circular deps — customer/ has no imports from others (leaf), inventory and pricing are next layer, orders and returns are top.",
+    "Created src/orders/. Moved the 18 order functions. Created src/orders/index.ts as barrel. Updated internal function imports (within orders/ stays), updated cross-module imports to point to new modules. TypeScript compiles. Ran test file — 612/612 still pass because test file still imports from './service' which still re-exports everything.",
+    "Created src/inventory/. Moved 14 inventory functions. Same pattern. Tests still green.",
+    "Created src/pricing/. Here I found a circular dependency risk: calculatePrice was using applyDiscount, but applyDiscount was calling getOrderTotal. Moved getOrderTotal from service.ts to orders/ (it's truly order logic). Updated pricing/ to not depend on orders. Tests green.",
+    "Created src/shipping/. 9 functions moved. Noticed shipping.getShippingRates was using a 200-line zone-mapping constant. Extracted to src/shipping/data/zones.ts for clarity. Tests green.",
+    "Created src/returns/. 7 functions. returns depends on orders (to look up the original order) and inventory (to restock). Clean.",
+    "Created src/customer/. 14 functions. customer is a leaf — nothing depends on customer. Actually wait, many others call customer.sendEmail. Customer is called by others (top of dep graph), not a leaf. Renamed mentally: customer is the notification layer, everyone calls in. That's fine, no circular deps as long as customer doesn't call back.",
+    "Checked: did customer/ import from orders/? Grepped. No. Good.",
+    "Created src/shared/. Moved the 16 utility functions — formatting, validation, date helpers. No domain logic. All other modules can import from shared.",
+    "src/service.ts is now 21 lines — just re-exports from each module. Tests still pass from the backward-compat re-exports.",
+    "Began migrating tests. The 4,200-line test file is organized by function name already. Split into: src/orders/__tests__/, src/inventory/__tests__/, etc. Each domain now has its own test file. Ran test count — 612/612 still passing after split.",
+    "Refactored test fixtures. The old test file had a massive setupTestData() that built 47 objects. Each domain's tests only need a subset. Split setup helpers into per-module conftest. Tests faster now — 8.3s total vs previous 14.2s.",
+    "Migrated external callers. Grepped for './service' imports across src/. Found 23 call sites. Updated each to import from specific module. Ran tsc — clean. Ran tests — 612/612 pass.",
+    "Deprecated src/service.ts re-exports. Added /** @deprecated Import from specific module (orders/, inventory/, etc.) */ JSDoc to each re-export. Added ESLint rule no-restricted-imports with a 'use specific modules' message. Existing imports already migrated, new ones blocked.",
+    "Circular dependency check. Ran madge --circular src/. Zero circular deps. madge graph: customer at top (called by all), shared at bottom (imported by all), orders/returns/pricing/inventory/shipping in middle as peers.",
+    "Coverage check. Coverage per-module: orders 94%, inventory 91%, pricing 96%, shipping 88%, returns 92%, customer 89%, shared 98%. All above 80% target.",
+    "Benchmarked the build. Before: tsc --build took 14 seconds. After: 11 seconds (benefit of smaller modules, more parallel compilation). Bundle size unchanged (obviously).",
+    "Final test suite: 612/612 passing. Refactor complete. Zero behavior changes. Much easier for new engineers to navigate — no more 4,847-line file. Shipped."
+  ],
+  "expected_contains": "612/612",
+  "max_turns": 28
+}
