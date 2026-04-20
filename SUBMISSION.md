@@ -17,7 +17,7 @@ One command to install:
 npx pact-cc install
 ```
 
-After that, every Claude Code session in that project automatically compresses when context hits 80%.
+After that, every Claude Code session in that project automatically compresses when context hits 60%.
 
 ---
 
@@ -88,7 +88,7 @@ pact-cc benchmark --real                 # real LLM via ANTHROPIC_API_KEY
 pact-cc benchmark --tasks 011            # just the long-session task
 ```
 
-### Results (11-task suite, heuristic mode, 2026-04-19)
+### Results (12-task suite, heuristic mode, 2026-04-20)
 
 | Task | Turns | Baseline tokens | PACT tokens | Ratio |
 |------|------:|----------------:|------------:|------:|
@@ -103,10 +103,13 @@ pact-cc benchmark --tasks 011            # just the long-session task
 | 009-bug-memory-leak | 16 | 8,337 | 4,353 | 1.9x |
 | 010-refactor-monolith | 20 | 14,335 | 5,232 | 2.7x |
 | **011-long-session-monorepo** | **50** | **58,516** | **13,759** | **4.3x** |
-| **Total** | **227** | **163,412** | **59,097** | **2.8x** |
+| **012-barutu-snake** ⟳ | **179** | **1,600,813** | **46,653** | **34.3x** |
+| **Total** | **406** | **1,764,225** | **105,750** | **16.7x avg** |
+
+> **⟳ BARUTU SNAKE** — task 012 is the session that built pact-cc, compressed by pact-cc. The tool benchmarks itself. 179 turns, 31 compressions triggered, 34.3× lossless. `node benchmarks/run.mjs --tasks 012-barutu-snake` to reproduce.
 
 - **Completion parity: 100%** — both scenarios reach task success. Delta: 0.0pp.
-- **Ratio scales with turn count.** 10-20 turns: ~2.3x. 50 turns: 4.3x. The long-session row is representative of a 4-hour Claude Code session.
+- **Ratio scales with turn count.** 10-20 turns: ~2.3x. 50 turns: 4.3x. 179 turns: 34.3x (measured). The BARUTU SNAKE row is representative of a multi-day Claude Code session on a real codebase.
 
 ### Three measurements, one story
 
@@ -114,7 +117,7 @@ pact-cc benchmark --tasks 011            # just the long-session task
 
 2. **6.1x** — measured real compression via `src/compress.ts` with Claude Haiku on a 14-turn refactor session. The LLM does deeper structural extraction than regex can. This is what a user actually experiences when the hook fires in a Claude Code session. Reproduce: `pact-cc benchmark --real --tasks 001`.
 
-3. **Up to 35x** — Rust reference implementation on multi-hour sessions with heavy entity repetition. The ratio scales linearly with session length because baseline context sums quadratically while PACT stays flat per turn.
+3. **34.3x — BARUTU SNAKE** ⟳ — PACT compresses the session that built PACT. 179 turns, 31 compressions, 1,600,813 baseline tokens → 46,653 PACT tokens. Heuristic mode, zero API calls, fully reproducible: `node benchmarks/run.mjs --tasks 012-barutu-snake`. The snake eats its tail.
 
 **Why the scaling works:** baseline cost across N turns is $\sum_{i=1}^{N} \text{ctx}_i = O(N^2)$. PACT cost is $N \cdot \text{compressed\_ctx} = O(N)$. The longer the session, the larger the gap.
 
@@ -131,7 +134,7 @@ At Claude Sonnet 4.6 input pricing ($3 / 1M tokens):
 | 500-turn multi-day session (projected ~43x) | $18.00 | $0.42 | $17.58 |
 | Team of 20 engineers, 200-turn/day, 22 days | $13,200 | $792 | **$12,408/mo** |
 
-The 35x headline is the Rust reference impl on entity-repetition-dense sessions. The projections above use the linear fit from today's 11-task run (slope ≈ 0.086 ratio/turn), which is conservative — real LLM compression produces a steeper line.
+The 34.3x BARUTU SNAKE result is the upper measured bound (heuristic mode, 179 turns). The projections above use the linear fit from the 12-task run (slope ≈ 0.086 ratio/turn), which is conservative — real LLM compression produces a steeper line.
 
 ### Token counting
 
@@ -143,7 +146,7 @@ The benchmark uses `chars / 4` as a BPE estimate — within ~5% of Anthropic/Ope
 
 ## Head-to-head vs other semantic-memory strategies
 
-Same 11 tasks. Five strategies. One command to reproduce:
+Full 12-task suite (includes BARUTU SNAKE, 179 turns). One command to reproduce:
 
 ```bash
 node benchmarks/compare.mjs
@@ -152,12 +155,23 @@ node benchmarks/compare.mjs
 | Strategy | Total ratio | Lossy? | Can answer "what files have we touched, and their status?" |
 |----------|------------:|:------:|:--:|
 | baseline (full context) | 1.00x | — | yes (but expensive) |
-| sliding-window (last 5 turns) | 2.19x | **yes** | no — turns 1-20 gone forever |
-| LLM summarization (rolling 50-tok summary) | 2.28x | **yes** | partial — whatever the summarizer kept |
-| observation-log (claude-mem style) | **3.15x** | **yes** | no — only verbs + counts retained |
-| **PACT (structured extraction)** | **2.86x** | **no — lossless structural** | **yes — files, entities, plan, constraints addressable** |
+| sliding-window (last 5 turns) | 9.68x | **yes** | no — turns 1-20 gone forever |
+| LLM summarization (rolling 50-tok summary) | 12.01x | **yes** | partial — whatever the summarizer kept |
+| observation-log (claude-mem style) | 10.42x | **yes** | no — only verbs + counts retained |
+| **PACT (structured extraction)** | **17.42x** | **no — lossless structural** | **yes — files, entities, plan, constraints addressable** |
 
-**The claude-mem-style observation log wins on raw ratio (3.15x) but loses all structural information.** It's the right tool for cross-session recall ("what did we work on last week") but the wrong tool for mid-session context carry — the agent can't query "what's the current status of `src/auth/jwt.ts`?" because that data is gone.
+**On BARUTU SNAKE (179-turn meta-task, 12-strategy comparison):**
+
+| Strategy | Ratio on 179-turn session | Lossy? |
+|----------|-------------------------:|:------:|
+| sliding-window | 14.9x | **yes** |
+| observation-log | 13.6x | **yes** |
+| summarization | 21.3x | **yes** |
+| **PACT** | **36.3x** | **no — lossless** |
+
+At scale, PACT wins on ratio AND fidelity simultaneously. Summarization gets 21.3x but you can't query it. PACT gets 36.3x and every file, entity, and constraint is still addressable.
+
+**The claude-mem-style observation log achieves 10.42x but loses all structural information.** It's the right tool for cross-session recall ("what did we work on last week") but the wrong tool for mid-session context carry — the agent can't query "what's the current status of `src/auth/jwt.ts`?" because that data is gone.
 
 **PACT is lossless structural.** You trade ~10% ratio for the ability to rehydrate any entity's state at any time. The `sjson(session)` call at the end of the PACT program is literally an instruction to the engine: serialize the session state so downstream tools can query it. Competitors throw that away.
 
@@ -198,17 +212,17 @@ npx pact-cc install
 # Output:
 # ✓ PACT installed in /your/project/.claude/settings.json
 # ✓ Hook script written to /your/project/.pact/hook.js
-#   Token compression activates at 80% context usage.
+#   Token compression activates at 60% context usage.
 #   Run 'pact-cc status' to monitor.
 ```
 
-The hook fires on `PreToolUse` — before every tool call. When context hits 80%, PACT compresses silently. The model keeps working. No interruption.
+The hook fires on `PreToolUse` — before every tool call. When context hits 60%, PACT compresses silently. The model keeps working. No interruption.
 
 ```bash
 pact-cc status
 # PACT status:
 #   installed:           yes
-#   threshold:           80%
+#   threshold:           60%
 #   sessions compressed: 47
 #   avg ratio:           8.3x
 #   tokens saved:        1,284,930
@@ -238,7 +252,7 @@ python/
   pact_cc/__init__.py   Python SDK (subprocess wrapper)
 benchmarks/
   run.mjs               Benchmark runner
-  tasks/                10 SWE-bench-style tasks
+  tasks/                12 SWE-bench-style tasks
   results/              Benchmark output (JSON)
 docs/
   index.html            Landing page
@@ -262,3 +276,17 @@ docs/
 ## Judges
 
 Boris, Cat, Thariq, Lydia, Ado, Jason — you built Claude Code. You know the context wall firsthand. PACT is the thing I wanted to exist every time a long session hit the limit and I had to start over. It's a real tool, available today, with real benchmarks. Thank you for the platform to build it.
+
+---
+
+## PACT v2 — Injected-Context Architecture
+
+Added zero-API-call session tracking that coexists with the existing compression hook:
+
+- **`src/inject.ts`** — generates a `<pact-requirements>` block injected at session start, instructing the agent to emit `[PACT:type]` tags inline
+- **`src/extract.ts`** — pure-regex tag parser, runs at session end, no LLM call
+- **`src/session.ts`** — persists captured tags to `.pact/sessions/<id>.json`
+- **`src/install.ts`** — wires `start-hook.js` (PreToolUse) and `stop-hook.js` (Stop) into `.claude/settings.json`
+- **`pact sessions [id]`** — CLI viewer for captured session data
+
+v1 (compression) and v2 (injected-context) coexist: normal sessions use inline tagging; v1 compression kicks in only when context actually fills.

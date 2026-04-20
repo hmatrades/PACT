@@ -1,5 +1,4 @@
-import { describe, it } from 'node:test'
-import assert from 'node:assert/strict'
+import { describe, it, expect } from 'vitest'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
@@ -12,18 +11,17 @@ describe('PACT hook logic', () => {
     const contextTokens = 10000
     const maxTokens = 200000
     const usage = contextTokens / maxTokens
-    assert.ok(usage < 0.80, 'should be below threshold')
+    expect(usage < 0.80).toBe(true)
   })
 
   it('threshold gate: at 80% triggers compression', () => {
     const contextTokens = 160000
     const maxTokens = 200000
     const usage = contextTokens / maxTokens
-    assert.ok(usage >= 0.80, 'should meet threshold')
+    expect(usage >= 0.80).toBe(true)
   })
 
   it('jsonToPACT produces valid PACT', () => {
-    // Simulate what jsonToPACT builds (mirrors src/compress.ts logic)
     const session = {
       goal: 'jwt-to-cookies',
       files: { 'src/auth/jwt.ts': 'done', 'src/utils/cookies.ts': 'new' },
@@ -51,12 +49,12 @@ describe('PACT hook logic', () => {
     ].join('\n')
 
     const { error, output } = runPACT(pact) as { error: string | null; output: string[] }
-    assert.equal(error, null, `PACT should be valid, got: ${error}`)
-    assert.equal(output.length, 1, 'should produce one output line')
+    expect(error).toBeNull()
+    expect(output.length).toBe(1)
     const parsed = JSON.parse(output[0])
-    assert.equal(parsed.goal, 'jwt-to-cookies')
-    assert.equal(parsed.files['src/auth/jwt.ts'], 'done')
-    assert.deepEqual(parsed.plan_done, ['read-files', 'create-util'])
+    expect(parsed.goal).toBe('jwt-to-cookies')
+    expect(parsed.files['src/auth/jwt.ts']).toBe('done')
+    expect(parsed.plan_done).toEqual(['read-files', 'create-util'])
   })
 
   it('compression reduces token count on long context', () => {
@@ -70,26 +68,25 @@ describe('PACT hook logic', () => {
     const after = (tokenize(terse) as unknown[]).length
     const ratio = before / after
 
-    assert.ok(ratio > 3, `expected >3x ratio, got ${ratio.toFixed(1)}x`)
+    expect(ratio > 3).toBe(true)
   })
 
   it('hook response always has continue: true', () => {
-    // Safe fallback contract — hook must never block tool calls
     const safeResponse = { continue: true as const }
-    assert.equal(safeResponse.continue, true)
+    expect(safeResponse.continue).toBe(true)
   })
 
   it('hook response may include prompt_inject', () => {
     const pact = `session = { goal: 'test' files: {} plan_done: [] plan_next: [] constraints: [] entities: {} }\n. sjson(session)`
     const { error } = runPACT(pact) as { error: string | null }
-    assert.equal(error, null)
+    expect(error).toBeNull()
 
     const response = {
       continue: true as const,
       prompt_inject: `[PACT compressed context — ratio: 6.1x]\n${pact}`,
     }
-    assert.ok(response.prompt_inject.includes('PACT'))
-    assert.ok(response.prompt_inject.includes('session'))
+    expect(response.prompt_inject.includes('PACT')).toBe(true)
+    expect(response.prompt_inject.includes('session')).toBe(true)
   })
 
   it('install merges into settings.json without overwriting existing hooks', () => {
@@ -100,7 +97,6 @@ describe('PACT hook logic', () => {
         ],
       },
     }
-    // Simulate merge logic
     const pactEntry = { matcher: '*', hooks: [{ type: 'command', command: 'node .pact/hook.js' }] }
     const merged = {
       ...existing,
@@ -109,8 +105,8 @@ describe('PACT hook logic', () => {
         PreToolUse: [...existing.hooks.PreToolUse, pactEntry],
       },
     }
-    assert.equal(merged.hooks.PreToolUse.length, 2, 'should preserve existing hook')
-    assert.equal(merged.hooks.PreToolUse[1].hooks[0].command, 'node .pact/hook.js')
+    expect(merged.hooks.PreToolUse.length).toBe(2)
+    expect(merged.hooks.PreToolUse[1].hooks[0].command).toBe('node .pact/hook.js')
   })
 
   it('uninstall removes only the PACT hook entry', () => {
@@ -125,7 +121,7 @@ describe('PACT hook logic', () => {
     const after = settings.hooks.PreToolUse.filter(
       (e) => !e.hooks.some((h) => h.command === 'node .pact/hook.js')
     )
-    assert.equal(after.length, 1, 'should remove only PACT entry')
-    assert.equal(after[0].hooks[0].command, 'echo other-hook')
+    expect(after.length).toBe(1)
+    expect(after[0].hooks[0].command).toBe('echo other-hook')
   })
 })
