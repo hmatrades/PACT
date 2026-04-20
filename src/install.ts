@@ -237,7 +237,7 @@ async function main() {
     return
   }
   const usage = (hookInput.context_tokens ?? 0) / (hookInput.max_tokens ?? 200000)
-  if (usage > 0.05) {
+  if (usage >= 0.05) {
     respond({ continue: true })
     return
   }
