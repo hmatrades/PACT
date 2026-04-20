@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { compress, decompress } from './compress.js'
 import { installPACT, uninstallPACT, readState, computeSavings } from './install.js'
+import { listSessions, readSession } from './session.js'
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2)
@@ -168,6 +169,26 @@ async function main(): Promise<void> {
       break
     }
 
+    case 'sessions': {
+      const id = args[1]
+      if (!id) {
+        const ids = listSessions(process.cwd())
+        if (ids.length === 0) {
+          console.log('No sessions captured yet.')
+        } else {
+          ids.forEach((sid) => console.log(sid))
+        }
+        break
+      }
+      const session = readSession(process.cwd(), id)
+      if (!session) {
+        console.error(`Error: session '${id}' not found`)
+        process.exit(1)
+      }
+      session.tags.forEach((tag) => console.log(`[${tag.type}] ${tag.content}`))
+      break
+    }
+
     case 'benchmark': {
       const { spawn } = await import('node:child_process')
       const { fileURLToPath } = await import('node:url')
@@ -201,6 +222,7 @@ async function main(): Promise<void> {
       console.log('  decompress [pact-code]')
       console.log('  status')
       console.log('  savings    [--before file --after file] [--price 3.0] [--json]')
+      console.log('  sessions   [id]')
       console.log('  benchmark  [--tasks N] [--output path]')
     }
   }
