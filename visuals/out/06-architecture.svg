@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 420" width="1400" height="420" font-family="system-ui,-apple-system,'Segoe UI',sans-serif">
+  <title>PACT architecture pipeline</title>
+  <desc>Three-stage pipeline: structure extraction, semantic dedup, lossless rehydration.</desc>
+
+  <defs>
+    <linearGradient id="nodeBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#58a6ff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#1f6feb" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="nodeGreen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3fb950" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#238636" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="nodeAmber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d29922" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#9e6a1a" stop-opacity="0.85"/>
+    </linearGradient>
+
+    <path id="edge1" d="M 200 160 Q 290 160 380 160"/>
+    <path id="edge2" d="M 560 160 Q 650 160 740 160"/>
+    <path id="edge3" d="M 920 160 Q 1010 160 1100 160"/>
+    <path id="edge4" d="M 1200 200 Q 1200 280 1200 340"/>
+  </defs>
+
+  <rect width="1400" height="420" fill="#0d1117"/>
+
+  <!-- Node 1: agent context -->
+  <g>
+    <title>agent context (natural language)</title>
+    <rect x="40" y="100" width="160" height="120" rx="8"
+          fill="url(#nodeBlue)" stroke="#30363d" stroke-width="1.5"
+          stroke-dasharray="4 3" opacity="0.9"/>
+    <text x="120" y="138" text-anchor="middle" fill="#f0f6fc" font-size="14" font-weight="600">agent context</text>
+    <text x="120" y="158" text-anchor="middle" fill="#c9d1d9" font-size="11">(natural language)</text>
+    <text x="120" y="192" text-anchor="middle" fill="#f0f6fc" font-size="13" font-weight="700">107,013</text>
+    <text x="120" y="208" text-anchor="middle" fill="#c9d1d9" font-size="10">tokens</text>
+  </g>
+
+  <!-- Node 2: [1] extract structured JSON -->
+  <g>
+    <title>Stage 1: extract structured JSON with Haiku</title>
+    <rect x="380" y="100" width="180" height="120" rx="8"
+          fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+    <rect x="394" y="114" width="152" height="36" rx="5" fill="url(#nodeAmber)"/>
+    <text x="470" y="137" text-anchor="middle" fill="#0d1117" font-size="12" font-weight="700">[1] extract JSON</text>
+    <text x="470" y="170" text-anchor="middle" fill="#c9d1d9" font-size="11">Haiku prompt → raw JSON</text>
+    <text x="470" y="192" text-anchor="middle" fill="#f0f6fc" font-size="13" font-weight="700">~2,100</text>
+    <text x="470" y="208" text-anchor="middle" fill="#c9d1d9" font-size="10">tokens (JSON intermediate)</text>
+  </g>
+
+  <!-- Node 3: [2] encode to PACT -->
+  <g>
+    <title>Stage 2: encode to PACT deterministically</title>
+    <rect x="740" y="100" width="180" height="120" rx="8"
+          fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+    <rect x="754" y="114" width="152" height="36" rx="5" fill="url(#nodeAmber)"/>
+    <text x="830" y="137" text-anchor="middle" fill="#0d1117" font-size="12" font-weight="700">[2] encode to PACT</text>
+    <text x="830" y="170" text-anchor="middle" fill="#c9d1d9" font-size="11">jsonToPACT() · deterministic</text>
+    <text x="830" y="192" text-anchor="middle" fill="#f0f6fc" font-size="13" font-weight="700">305</text>
+    <text x="830" y="208" text-anchor="middle" fill="#c9d1d9" font-size="10">tokens</text>
+  </g>
+
+  <!-- Node 4: PACT program -->
+  <g>
+    <title>PACT program (compact form, engine-validated)</title>
+    <rect x="1100" y="100" width="200" height="120" rx="8"
+          fill="url(#nodeGreen)" stroke="#30363d" stroke-width="1.5"/>
+    <text x="1200" y="138" text-anchor="middle" fill="#f0f6fc" font-size="14" font-weight="600">PACT program</text>
+    <text x="1200" y="158" text-anchor="middle" fill="#e6edf3" font-size="11">engine-validated</text>
+    <text x="1200" y="192" text-anchor="middle" fill="#f0f6fc" font-size="14" font-weight="700">305 tokens</text>
+    <text x="1200" y="208" text-anchor="middle" fill="#e6edf3" font-size="10">351× smaller</text>
+  </g>
+
+  <!-- Node 5: [3] rehydrate -->
+  <g>
+    <title>Stage 3: lossless rehydration on demand</title>
+    <rect x="1070" y="320" width="260" height="80" rx="8"
+          fill="url(#nodeGreen)" stroke="#30363d" stroke-width="1.5" opacity="0.9"/>
+    <text x="1200" y="346" text-anchor="middle" fill="#f0f6fc" font-size="13" font-weight="600">[3] rehydrate on demand</text>
+    <text x="1200" y="364" text-anchor="middle" fill="#e6edf3" font-size="10">subgraph expand → natural language</text>
+    <text x="1200" y="384" text-anchor="middle" fill="#f0f6fc" font-size="11" font-weight="700">~580 tokens of specific entity prose</text>
+  </g>
+
+  <!-- Edges -->
+  <use href="#edge1" fill="none" stroke="#30363d" stroke-width="1.5"/>
+  <use href="#edge2" fill="none" stroke="#30363d" stroke-width="1.5"/>
+  <use href="#edge3" fill="none" stroke="#30363d" stroke-width="1.5"/>
+  <use href="#edge4" fill="none" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="5 4"/>
+
+  <!-- Arrowheads -->
+  <polygon points="376,156 382,160 376,164" fill="#30363d"/>
+  <polygon points="736,156 742,160 736,164" fill="#30363d"/>
+  <polygon points="1096,156 1102,160 1096,164" fill="#30363d"/>
+  <polygon points="1196,336 1200,342 1204,336" fill="#3fb950"/>
+
+  <!-- Edge 1: blue particles (stage 1 input) -->
+  <g>
+    <circle r="3" fill="#58a6ff"><animateMotion dur="1.8s" repeatCount="indefinite" begin="0s"><mpath href="#edge1"/></animateMotion><animate attributeName="opacity" values="0;1;1;0" dur="1.8s" repeatCount="indefinite" begin="0s"/></circle>
+    <circle r="3" fill="#58a6ff"><animateMotion dur="1.8s" repeatCount="indefinite" begin="0.45s"><mpath href="#edge1"/></animateMotion><animate attributeName="opacity" values="0;1;1;0" dur="1.8s" repeatCount="indefinite" begin="0.45s"/></circle>
+    <circle r="3" fill="#58a6ff"><animateMotion dur="1.8s" repeatCount="indefinite" begin="0.9s"><mpath href="#edge1"/></animateMotion><animate attributeName="opacity" values="0;1;1;0" dur="1.8s" repeatCount="indefinite" begin="0.9s"/></circle>
+    <circle r="3" fill="#58a6ff"><animateMotion dur="1.8s" repeatCount="indefinite" begin="1.35s"><mpath href="#edge1"/></animateMotion><animate attributeName="opacity" values="0;1;1;0" dur="1.8s" repeatCount="indefinite" begin="1.35s"/></circle>
+  </g>
+
+  <!-- Edge 2: blue particles (still input side) -->
+  <g>
+    <circle r="3" fill="#58a6ff"><animateMotion dur="1.8s" repeatCount="indefinite" begin="0.15s"><mpath href="#edge2"/></animateMotion><animate attributeName="opacity" values="0;1;1;0" dur="1.8s" repeatCount="indefinite" begin="0.15s"/></circle>
+    <circle r="3" fill="#58a6ff"><animateMotion dur="1.8s" repeatCount="indefinite" begin="0.6s"><mpath href="#edge2"/></animateMotion><animate attributeName="opacity" values="0;1;1;0" dur="1.8s" repeatCount="indefinite" begin="0.6s"/></circle>
+    <circle r="3" fill="#58a6ff"><animateMotion dur="1.8s" repeatCount="indefinite" begin="1.05s"><mpath href="#edge2"/></animateMotion><animate attributeName="opacity" values="0;1;1;0" dur="1.8s" repeatCount="indefinite" begin="1.05s"/></circle>
+  </g>
+
+  <!-- Edge 3: amber particles (compression happens here) -->
+  <g>
+    <circle r="3" fill="#d29922"><animateMotion dur="1.8s" repeatCount="indefinite" begin="0s"><mpath href="#edge3"/></animateMotion><animate attributeName="opacity" values="0;1;1;0" dur="1.8s" repeatCount="indefinite" begin="0s"/></circle>
+    <circle r="3" fill="#d29922"><animateMotion dur="1.8s" repeatCount="indefinite" begin="0.6s"><mpath href="#edge3"/></animateMotion><animate attributeName="opacity" values="0;1;1;0" dur="1.8s" repeatCount="indefinite" begin="0.6s"/></circle>
+    <circle r="3" fill="#d29922"><animateMotion dur="1.8s" repeatCount="indefinite" begin="1.2s"><mpath href="#edge3"/></animateMotion><animate attributeName="opacity" values="0;1;1;0" dur="1.8s" repeatCount="indefinite" begin="1.2s"/></circle>
+  </g>
+
+  <!-- Edge 4: green particles (rehydration on demand) -->
+  <g>
+    <circle r="2.5" fill="#3fb950"><animateMotion dur="2.4s" repeatCount="indefinite" begin="0s"><mpath href="#edge4"/></animateMotion><animate attributeName="opacity" values="0;0.9;0.9;0" dur="2.4s" repeatCount="indefinite" begin="0s"/></circle>
+    <circle r="2.5" fill="#3fb950"><animateMotion dur="2.4s" repeatCount="indefinite" begin="1.2s"><mpath href="#edge4"/></animateMotion><animate attributeName="opacity" values="0;0.9;0.9;0" dur="2.4s" repeatCount="indefinite" begin="1.2s"/></circle>
+  </g>
+
+  <!-- Stage annotations -->
+  <text x="470" y="258" text-anchor="middle" fill="#8b949e" font-size="10">~100ms · Haiku API call</text>
+  <text x="830" y="258" text-anchor="middle" fill="#8b949e" font-size="10">~2ms · pure function · zero deps</text>
+  <text x="1200" y="414" text-anchor="middle" fill="#8b949e" font-size="10" font-style="italic">only when agent asks for detail</text>
+
+  <!-- Title -->
+  <text x="40" y="44" fill="#f0f6fc" font-size="18" font-weight="700">PACT pipeline</text>
+  <text x="40" y="66" fill="#8b949e" font-size="12">natural language → structured JSON → PACT program → rehydrated subgraph</text>
+
+  <!-- Branding strip -->
+  <text x="700" y="400" text-anchor="middle" fill="#30363d" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="9">├─ pact-cc · semantic compression middleware ── v0.1 ── PolyForm NC ─┤</text>
+</svg>

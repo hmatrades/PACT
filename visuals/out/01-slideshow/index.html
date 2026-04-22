@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>pact-cc — the deck</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: #0d1117;
+      color: #f0f6fc;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      overflow: hidden;
+    }
+    #deck { position: relative; height: 100vh; }
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 6vh 8vw;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 240ms ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .slide.active { opacity: 1; pointer-events: auto; }
+    .slide h1 {
+      font-size: clamp(48px, 8vw, 128px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.4em;
+    }
+    .slide h2 { font-size: clamp(24px, 3vw, 40px); color: #8b949e; }
+    .slide .rule { color: #30363d; margin: 1em 0; letter-spacing: 0.5em; }
+    .slide .sub {
+      font-size: clamp(14px, 1.8vw, 22px);
+      color: #8b949e;
+      margin-top: 0.5em;
+    }
+    #hud {
+      position: fixed;
+      bottom: 16px;
+      right: 20px;
+      color: #8b949e;
+      font-size: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      z-index: 9999;
+    }
+    #progress {
+      display: inline-block;
+      width: 120px;
+      height: 2px;
+      background: #21262d;
+      position: relative;
+    }
+    #progress i {
+      display: block;
+      height: 100%;
+      background: #3fb950;
+      transition: width 240ms ease;
+    }
+    .blink::after {
+      content: '\25CA';
+      color: #3fb950;
+      animation: blink 1s steps(2) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    .fill  { color: #58a6ff; }
+    .out   { color: #3fb950; }
+    .warn  { color: #d29922; }
+    .lossy { color: #f85149; }
+    .dim   { color: #30363d; }
+
+    /* ── Overview grid ── */
+    #overview {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0d1117;
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 40px;
+    }
+    #overview.active { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .ov-thumb {
+      background: #161b22;
+      border: 2px solid #21262d;
+      border-radius: 6px;
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color 160ms;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      font-size: 10px;
+      position: relative;
+    }
+    .ov-thumb:hover { border-color: #3fb950; }
+    .ov-num {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      color: #58a6ff;
+      font-size: 11px;
+    }
+    .ov-title {
+      position: absolute;
+      bottom: 6px;
+      left: 8px;
+      right: 8px;
+      color: #8b949e;
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Slide 1: cover ── */
+    #s1 {
+      align-items: center;
+      text-align: center;
+      background: radial-gradient(ellipse at 50% 60%, #0f1f12 0%, #0d1117 70%);
+    }
+    #s1 .ascii-block {
+      font-size: clamp(10px, 1.4vw, 18px);
+      color: #3fb950;
+      line-height: 1.1;
+      margin-bottom: 2vh;
+      white-space: pre;
+      text-shadow: 0 0 12px rgba(63,185,80,0.4);
+    }
+    #s1 .title-main {
+      font-size: clamp(56px, 9vw, 120px);
+      font-weight: 700;
+      color: #3fb950;
+      letter-spacing: -0.03em;
+      text-shadow: 0 0 40px rgba(63,185,80,0.3);
+    }
+    #s1 .tagline {
+      font-size: clamp(16px, 2.2vw, 28px);
+      color: #8b949e;
+      margin-top: 1vh;
+      letter-spacing: 0.02em;
+    }
+    #s1 .prompt-line {
+      margin-top: 4vh;
+      font-size: clamp(14px, 1.8vw, 22px);
+      color: #58a6ff;
+    }
+    #s1 .ratio-pill {
+      display: inline-block;
+      margin-top: 2vh;
+      background: #161b22;
+      border: 1px solid #3fb950;
+      border-radius: 4px;
+      padding: 6px 18px;
+      color: #3fb950;
+      font-size: clamp(12px, 1.4vw, 18px);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Slide 2: the wall ── */
+    #s2 { background: #0d1117; }
+    #s2 .wall-layout {
+      display: flex;
+      gap: 3vw;
+      height: 70vh;
+      align-items: flex-start;
+    }
+    #s2 pre.console {
+      flex: 1;
+      overflow: hidden;
+      max-height: 0;
+      background: #010409;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: clamp(9px, 1.1vw, 13px);
+      line-height: 1.5;
+      color: #8b949e;
+      animation: fillUp 4s ease-out 0.5s forwards;
+    }
+    @keyframes fillUp {
+      0%   { max-height: 0; }
+      100% { max-height: 70vh; }
+    }
+    #s2 .gauge-wrap {
+      width: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      height: 60vh;
+    }
+    #s2 .gauge-label { font-size: 11px; color: #8b949e; writing-mode: vertical-rl; }
+    #s2 .gauge-outer {
+      flex: 1;
+      width: 32px;
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    #s2 .gauge-fill {
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(to top, #f85149, #d29922 60%);
+      animation: gaugeUp 4s ease-out 0.5s forwards;
+      border-radius: 3px;
+    }
+    @keyframes gaugeUp {
+      0%   { height: 0%; }
+      100% { height: 100%; }
+    }
+    #s2 .gauge-pct {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f85149;
+    }
+
+    /* ── Slide 3: the choice ── */
+    #s3 .fork-wrap {
+      display: flex;
+      gap: 5vw;
+      margin-top: 4vh;
+      align-items: flex-start;
+    }
+    #s3 .fork-path {
+      flex: 1;
+      background: #161b22;
+      border: 2px solid #21262d;
+      border-radius: 8px;
+      padding: 3vh 3vw;
+      text-align: center;
+    }
+    #s3 .fork-path.bad-left  { border-color: #f85149; }
+    #s3 .fork-path.bad-right { border-color: #f85149; }
+    #s3 .fork-icon  { font-size: clamp(32px, 4vw, 56px); margin-bottom: 0.4em; }
+    #s3 .fork-name  { font-size: clamp(18px, 2.5vw, 32px); font-weight: 700; margin-bottom: 0.4em; }
+    #s3 .fork-desc  { font-size: clamp(12px, 1.4vw, 16px); color: #8b949e; margin-bottom: 1em; }
+    #s3 .fork-cross { font-size: clamp(28px, 3.5vw, 48px); color: #f85149; }
+    #s3 .fork-mid {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding-top: 4vh;
+      color: #30363d; font-size: clamp(20px, 2.5vw, 32px);
+    }
+
+    /* ── Slide 4: insight ── */
+    #s4 .cloud-wrap {
+      margin-top: 3vh;
+      display: flex; flex-wrap: wrap; gap: 1vh 2vw; justify-content: center;
+    }
+    #s4 .cloud-word {
+      font-size: clamp(12px, 1.8vw, 22px); color: #58a6ff;
+      opacity: 1; transition: opacity 0.6s ease;
+    }
+    #s4 .cloud-word.dimmed { opacity: 0.06; }
+    #s4 .insight-stat {
+      text-align: center; margin-top: 4vh;
+      font-size: clamp(28px, 4vw, 56px); font-weight: 700; color: #3fb950;
+    }
+    #s4 .insight-sub {
+      text-align: center; margin-top: 1vh;
+      color: #8b949e; font-size: clamp(14px, 1.6vw, 20px);
+    }
+
+    /* ── Slide 5: funnel ── */
+    #s5 { padding: 2vh 4vw; justify-content: flex-start; }
+    #s5 h2 { margin-bottom: 1vh; }
+    #s5 iframe { width: 100%; height: 80vh; border: 0; }
+
+    /* ── Slide 6: receipt ── */
+    #s6 .receipt-wrap {
+      display: flex; gap: 4vw; margin-top: 3vh; align-items: stretch;
+    }
+    #s6 .receipt-box {
+      flex: 1; background: #010409; border: 1px solid #21262d;
+      border-radius: 8px; padding: 2.5vh 2.5vw;
+    }
+    #s6 .receipt-box.after { border-color: #3fb950; background: #0a1d0d; }
+    #s6 .receipt-fname { font-size: clamp(13px, 1.5vw, 18px); color: #58a6ff; margin-bottom: 0.8em; }
+    #s6 .receipt-size  { font-size: clamp(32px, 4.5vw, 64px); font-weight: 700; }
+    #s6 .receipt-box:not(.after) .receipt-size { color: #f85149; }
+    #s6 .receipt-box.after .receipt-size { color: #3fb950; }
+    #s6 .receipt-label { color: #8b949e; font-size: clamp(11px, 1.2vw, 15px); margin-top: 0.4em; }
+    #s6 .ratio-badge { text-align: center; padding-top: 3vh; font-size: clamp(14px, 1.8vw, 22px); color: #8b949e; }
+    #s6 .ratio-big { font-size: clamp(40px, 6vw, 80px); font-weight: 700; color: #3fb950; }
+    #s6 .arrow-mid {
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(24px, 3vw, 40px); color: #3fb950; padding: 0 1vw;
+    }
+
+    /* ── Slide 7: scaling ── */
+    #s7 { padding: 2vh 4vw; justify-content: flex-start; }
+    #s7 h2 { margin-bottom: 1vh; }
+    #s7 iframe { width: 100%; height: 70vh; border: 0; }
+
+    /* ── Slide 8: head-to-head ── */
+    #s8 .bars-wrap { margin-top: 3vh; display: flex; flex-direction: column; gap: 1.6vh; }
+    #s8 .bar-row { display: flex; align-items: center; gap: 1.5vw; }
+    #s8 .bar-label {
+      width: 18vw; font-size: clamp(11px, 1.3vw, 16px);
+      text-align: right; color: #8b949e;
+    }
+    #s8 .bar-label.winner { color: #f0f6fc; font-weight: 700; }
+    #s8 .bar-track { flex: 1; height: 28px; background: #161b22; border-radius: 4px; overflow: hidden; }
+    #s8 .bar-fill { height: 100%; border-radius: 4px; background: #30363d; transition: width 1s ease; }
+    #s8 .bar-fill.winner { background: #3fb950; }
+    #s8 .bar-val { width: 6vw; font-size: clamp(11px, 1.3vw, 16px); color: #8b949e; }
+    #s8 .bar-val.winner { color: #3fb950; font-weight: 700; }
+
+    /* ── Slide 9: cost ── */
+    #s9 {
+      align-items: center; text-align: center;
+      background: radial-gradient(ellipse at 50% 50%, #1a0a05 0%, #0d1117 70%);
+    }
+    #s9 .cost-prefix { font-size: clamp(32px, 4vw, 56px); color: #d29922; margin-bottom: -0.1em; }
+    #s9 .cost-number {
+      font-size: clamp(64px, 10vw, 140px); font-weight: 700; color: #f85149;
+      letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+    }
+    #s9 .cost-sub { font-size: clamp(12px, 1.6vw, 20px); color: #8b949e; margin-top: 1.5vh; }
+    #s9 .cost-saved { margin-top: 3vh; font-size: clamp(14px, 1.8vw, 22px); color: #3fb950; }
+
+    /* ── Slide 10: install ── */
+    #s10 { background: #0d1117; align-items: flex-start; }
+    #s10 .term-box {
+      margin-top: 3vh; background: #010409; border: 1px solid #21262d;
+      border-radius: 8px; padding: 2.5vh 3vw; width: 100%; max-width: 820px;
+    }
+    #s10 .term-topbar { display: flex; gap: 7px; margin-bottom: 2vh; }
+    #s10 .term-dot { width: 12px; height: 12px; border-radius: 50%; }
+    #s10 .term-dot:nth-child(1) { background: #f85149; }
+    #s10 .term-dot:nth-child(2) { background: #d29922; }
+    #s10 .term-dot:nth-child(3) { background: #3fb950; }
+    #s10 .term-out { font-size: clamp(12px, 1.6vw, 18px); line-height: 1.8; min-height: 8em; }
+    #s10 .term-cmd  { color: #58a6ff; display: block; }
+    #s10 .term-ok   { color: #3fb950; display: block; }
+    #s10 .term-info { color: #8b949e; display: block; }
+    .caret {
+      display: inline-block; width: 9px; height: 1.1em;
+      background: #3fb950; vertical-align: text-bottom;
+      animation: blink 1s steps(2) infinite;
+    }
+
+    /* ── Slide 11: Venn ── */
+    #s11 { align-items: center; text-align: center; }
+    #s11 .venn-wrap {
+      margin-top: 3vh;
+      width: min(70vw, 700px); height: min(38vh, 340px);
+    }
+    #s11 svg.venn { width: 100%; height: 100%; overflow: visible; }
+
+    /* ── Slide 12: credits ── */
+    #s12 { align-items: center; text-align: center; overflow: hidden; }
+    #s12 .credits-scroll { animation: scrollUp 12s linear 0.5s forwards; }
+    @keyframes scrollUp {
+      0%   { transform: translateY(60px); }
+      100% { transform: translateY(-200px); }
+    }
+    #s12 .credits-name  { font-size: clamp(18px, 2.8vw, 36px); color: #f0f6fc; margin: 0.6em 0; }
+    #s12 .credits-role  { font-size: clamp(11px, 1.3vw, 16px); color: #8b949e; margin-top: -0.4em; margin-bottom: 0.6em; }
+    #s12 .credits-links { margin-top: 3vh; font-size: clamp(13px, 1.5vw, 18px); }
+    #s12 .credits-link  { color: #58a6ff; display: block; margin: 0.4em 0; }
+
+    /* ── Print mode ── */
+    @media print {
+      html, body { overflow: auto; height: auto; }
+      #deck { height: auto; position: static; }
+      #hud, #overview { display: none !important; }
+      .slide {
+        position: static; opacity: 1 !important; pointer-events: auto;
+        page-break-after: always; height: 100vh; display: flex;
+      }
+    }
+
+    /* ── Presenter notes ── */
+    #notes-panel {
+      display: none;
+      position: fixed; bottom: 40px; left: 8vw; right: 8vw;
+      background: rgba(22,27,34,0.95); border: 1px solid #30363d;
+      border-radius: 6px; padding: 14px 20px; font-size: 14px;
+      color: #8b949e; z-index: 500;
+    }
+    body.presenter #notes-panel { display: block; }
+  </style>
+</head>
+<body>
+<main id="deck">
+
+  <!-- ══ Slide 1 — Cover ══ -->
+  <section class="slide" id="s1" data-slide="1"
+    data-notes="pact-cc — semantic compression middleware for Claude Code. Silently hooks into every session. When context hits 80% it compresses automatically.">
+    <div class="ascii-block" aria-hidden="true">&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2557;  &#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2557;  &#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2557;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2557;
+&#x2588;&#x2588;&#x2554;&#x2550;&#x2550;&#x2588;&#x2588;&#x2557;&#x2588;&#x2588;&#x2554;&#x2550;&#x2550;&#x2588;&#x2588;&#x2557;&#x2588;&#x2588;&#x2554;&#x2550;&#x2550;&#x2550;&#x2550;&#x255D;&#x2554;&#x2550;&#x2550;&#x2588;&#x2588;&#x2554;&#x2550;&#x2550;&#x255D;
+&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2554;&#x255D;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2551;&#x2588;&#x2588;&#x2551;           &#x2588;&#x2588;&#x2551;
+&#x2588;&#x2588;&#x2554;&#x2550;&#x2550;&#x2550;&#x255D; &#x2588;&#x2588;&#x2554;&#x2550;&#x2550;&#x2588;&#x2588;&#x2551;&#x2588;&#x2588;&#x2551;           &#x2588;&#x2588;&#x2551;
+&#x2588;&#x2588;&#x2551;     &#x2588;&#x2588;&#x2551;  &#x2588;&#x2588;&#x2551;&#x255A;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2557;   &#x2588;&#x2588;&#x2551;
+&#x255A;&#x2550;&#x255D;     &#x255A;&#x2550;&#x255D;  &#x255A;&#x2550;&#x255D; &#x255A;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x255D;   &#x255A;&#x2550;&#x255D;</div>
+    <div class="title-main">pact-cc</div>
+    <div class="tagline">semantic compression middleware for Claude Code</div>
+    <div class="ratio-pill">3 &#x2013; 35&#xD7; token reduction</div>
+    <div class="prompt-line">
+      <span style="color:#3fb950">$</span>&#x00A0;npx pact-cc install<span style="color:#3fb950;animation:blink 1s steps(2) infinite">&#x25CA;</span>
+    </div>
+  </section>
+
+  <!-- ══ Slide 2 — The Wall ══ -->
+  <section class="slide" id="s2" data-slide="2"
+    data-notes="Every long Claude Code session eventually fills context. Throughput stalls, quality drops. The gauge climbs to 100% and you are stuck.">
+    <h2>Every long Claude Code session hits the context wall.</h2>
+    <div class="wall-layout">
+      <pre class="console">agent &gt; reading src/engine.ts ... ok
+agent &gt; reading src/compress.ts ... ok
+agent &gt; extracting entities from session context
+agent &gt; entity: File(src/engine.ts) @ rev 4
+agent &gt; entity: File(src/compress.ts) @ rev 2
+agent &gt; entity: Plan(implement-hook) @ step 3/7
+agent &gt; entity: Decision(use-semver) @ t=248
+agent &gt; continuing plan ... reading pact-engine.js
+agent &gt; reading pact-engine.js ... ok (2,841 lines)
+agent &gt; re-reading session context (carried forward)
+agent &gt; entity: File(src/engine.ts) @ rev 5
+agent &gt; entity: Plan(implement-hook) @ step 4/7
+agent &gt; re-reading session context (carried forward)
+agent &gt; as I mentioned in the earlier step, we need ...
+agent &gt; continuing from previous context: the hook should ...
+agent &gt; I was just about to refactor the dedup layer ...
+agent &gt; entity: File(src/compress.ts) @ rev 3 (full restate)
+agent &gt; entity: File(pact-engine.js) @ rev 1 (full restate)
+agent &gt; re-reading session context (carried forward)
+agent &gt; re-reading session context (carried forward)
+agent &gt; re-reading session context (carried forward)
+agent &gt; WARNING: context at 72% capacity
+agent &gt; re-reading session context (carried forward)
+agent &gt; entity: Plan(implement-hook) full restate @ step 5/7
+agent &gt; I was just about to ... as I mentioned ...
+agent &gt; continuing from ... I was just about to ...
+agent &gt; re-reading session context (carried forward)
+agent &gt; re-reading session context (carried forward)
+agent &gt; WARNING: context at 88% capacity
+agent &gt; entity: File(src/engine.ts) full restate (12,400 tok)
+agent &gt; entity: File(src/compress.ts) full restate (8,200 tok)
+agent &gt; entity: Decision(use-semver) full restate (1,800 tok)
+agent &gt; re-reading session context (carried forward)
+agent &gt; re-reading session context (carried forward)
+agent &gt; CRITICAL: context at 97% -- truncating ...</pre>
+      <div class="gauge-wrap">
+        <div class="gauge-label" aria-label="context usage">ctx</div>
+        <div class="gauge-outer" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="gauge-bar">
+          <div class="gauge-fill"></div>
+        </div>
+        <div class="gauge-pct" id="gauge-pct">0%</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Slide 3 — The Choice ══ -->
+  <section class="slide" id="s3" data-slide="3"
+    data-notes="When you hit the wall the only existing choices are summarize (lossy, breaks continuity) or keep everything (burns tokens). Both are bad.">
+    <h2>Summarize (lossy) or keep everything (expensive). Both bad.</h2>
+    <div class="fork-wrap">
+      <div class="fork-path bad-left">
+        <div class="fork-icon" aria-hidden="true">&#x1F5DC;&#xFE0F;</div>
+        <div class="fork-name lossy">Summarize</div>
+        <div class="fork-desc">Prose summary discards<br>entity state, plans,<br>and decision history.</div>
+        <div class="fork-cross">&#x2717; lossy &#xB7; irreversible</div>
+      </div>
+      <div class="fork-mid">
+        <span style="color:#30363d;font-size:clamp(14px,2vw,24px)">OR</span>
+      </div>
+      <div class="fork-path bad-right">
+        <div class="fork-icon" aria-hidden="true">&#x1F4B8;</div>
+        <div class="fork-name warn">Keep everything</div>
+        <div class="fork-desc">Carry full context every<br>turn. Costs compound.<br>Quality degrades.</div>
+        <div class="fork-cross">&#x2717; expensive &#xB7; slow</div>
+      </div>
+    </div>
+    <div style="margin-top:4vh;text-align:center;color:#8b949e;font-size:clamp(13px,1.5vw,18px)">
+      There is a third option.
+    </div>
+  </section>
+
+  <!-- ══ Slide 4 — The Insight ══ -->
+  <section class="slide" id="s4" data-slide="4"
+    data-notes="~70% of agent context tokens are connective tissue — phrases that reference earlier state rather than carry new information. Strip those and compress structurally.">
+    <h2>~70% of agent context is connective tissue.</h2>
+    <div class="cloud-wrap" id="cloud-wrap">
+      <span class="cloud-word">I was just about to...</span>
+      <span class="cloud-word">as I mentioned earlier...</span>
+      <span class="cloud-word">continuing from...</span>
+      <span class="cloud-word">referring back to...</span>
+      <span class="cloud-word">as we discussed...</span>
+      <span class="cloud-word">picking up where we left off...</span>
+      <span class="cloud-word">in the previous step...</span>
+      <span class="cloud-word">to reiterate...</span>
+      <span class="cloud-word">as noted above...</span>
+      <span class="cloud-word">carrying forward the context...</span>
+      <span class="cloud-word">re-reading the full session...</span>
+      <span class="cloud-word">context (carried forward)</span>
+      <span class="cloud-word">continuing from previous context:</span>
+      <span class="cloud-word">as I said before...</span>
+      <span class="cloud-word">to recap...</span>
+      <span class="cloud-word">following up on...</span>
+      <span class="cloud-word">as established earlier...</span>
+      <span class="cloud-word">in line with our plan...</span>
+    </div>
+    <div class="insight-stat">~70%</div>
+    <div class="insight-sub">connective tissue &#x2014; not information.<br>
+      <span class="out">PACT compresses it structurally. Losslessly.</span>
+    </div>
+  </section>
+
+  <!-- ══ Slide 5 — Funnel ══ -->
+  <section class="slide" id="s5" data-slide="5"
+    data-notes="Four-stage PACT pipeline: structure extraction, semantic dedup, PACT program, lossless rehydration.">
+    <h2>The PACT pipeline</h2>
+    <iframe src="../02-funnel.svg" title="PACT compression funnel animation" loading="lazy"></iframe>
+  </section>
+
+  <!-- ══ Slide 6 — The Receipt ══ -->
+  <section class="slide" id="s6" data-slide="6"
+    data-notes="This session. These exact file sizes. 418 KB of session markdown goes to 1.19 KB PACT program. 352x measured.">
+    <h2>This session &#x2192; this file. 352&#xD7;.</h2>
+    <div class="receipt-wrap">
+      <div class="receipt-box">
+        <div class="receipt-fname">session.md</div>
+        <div class="receipt-size">418 KB</div>
+        <div class="receipt-label">raw session markdown</div>
+      </div>
+      <div class="arrow-mid">&#x2192;</div>
+      <div class="receipt-box after">
+        <div class="receipt-fname">session.pact</div>
+        <div class="receipt-size">1.19 KB</div>
+        <div class="receipt-label">compressed PACT program</div>
+      </div>
+    </div>
+    <div class="ratio-badge">
+      compression ratio<br>
+      <span class="ratio-big">352&#xD7;</span>
+    </div>
+  </section>
+
+  <!-- ══ Slide 7 — Scaling ══ -->
+  <section class="slide" id="s7" data-slide="7"
+    data-notes="Longer session equals bigger win. The chart shows PACT compression ratio diverging from baselines as session length grows.">
+    <h2>Longer session = bigger win.</h2>
+    <iframe src="../03-scaling-race.html" title="PACT scaling race chart" loading="lazy"></iframe>
+  </section>
+
+  <!-- ══ Slide 8 — Head-to-Head ══ -->
+  <section class="slide" id="s8" data-slide="8"
+    data-notes="PACT vs every semantic-memory baseline. BARUTU SNAKE: PACT compressed the session that built PACT — 34.3× lossless.">
+    <h2>Beats every baseline. Even on its own origin story.</h2>
+    <div style="margin-bottom:1vh;color:#8b949e;font-size:clamp(9px,0.9vw,12px)">compression ratio · BARUTU SNAKE benchmark (179-turn task) · node benchmarks/compare.mjs</div>
+    <div class="bars-wrap" id="bars-wrap">
+      <div class="bar-row">
+        <div class="bar-label winner">pact-cc</div>
+        <div class="bar-track"><div class="bar-fill winner" style="width:0%" data-target="95"></div></div>
+        <div class="bar-val winner">36.3&#xD7; lossless</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Summarize (LLM)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0%" data-target="56"></div></div>
+        <div class="bar-val">21.3&#xD7; lossy</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Sliding window</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0%" data-target="39"></div></div>
+        <div class="bar-val">14.9&#xD7; lossy</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">claude-mem obs-log</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0%" data-target="36"></div></div>
+        <div class="bar-val">13.6&#xD7; lossy</div>
+      </div>
+    </div>
+    <div style="margin-top:2vh;background:#0d1117;border:1px solid #238636;border-radius:6px;padding:10px 16px;font-size:clamp(11px,1.1vw,14px);color:#3fb950;font-family:ui-monospace,'SF Mono',monospace">
+      ⟳ BARUTU SNAKE · task 012 · PACT compressed the session that built PACT · 179 turns · 34.3&#xD7; lossless · <span style="color:#8b949e">node benchmarks/run.mjs --tasks 012-barutu-snake</span>
+    </div>
+    <div style="margin-top:1.5vh;color:#8b949e;font-size:clamp(10px,1vw,13px)">
+      0.0pp task-completion delta &#xB7; lossless rehydration &#xB7; 140 tests passing &#xB7; PACT wins ratio AND fidelity simultaneously
+    </div>
+  </section>
+
+  <!-- ══ Slide 9 — Cost ══ -->
+  <section class="slide" id="s9" data-slide="9"
+    data-notes="$688 per 20-engineer team per month. Measured on real sessions. $8,259.20 per year.">
+    <div class="cost-prefix">without PACT, you&#x2019;re spending</div>
+    <div class="cost-number" id="cost-num">$0.00</div>
+    <div class="cost-sub">per 20-engineer team &#xB7; per year &#xB7; measured, not projected</div>
+    <div class="cost-saved out">PACT cuts that by 3&#x2013;35&#xD7;. Typically &gt;50%.</div>
+  </section>
+
+  <!-- ══ Slide 10 — Install ══ -->
+  <section class="slide" id="s10" data-slide="10"
+    data-notes="One command. npx pact-cc install. The hook is wired. Every session compresses automatically.">
+    <h2>One command. Every session compresses automatically.</h2>
+    <div class="term-box">
+      <div class="term-topbar">
+        <div class="term-dot"></div>
+        <div class="term-dot"></div>
+        <div class="term-dot"></div>
+      </div>
+      <div class="term-out" id="term-out"></div>
+    </div>
+  </section>
+
+  <!-- ══ Slide 11 — Why PACT &#x2260; claude-mem ══ -->
+  <section class="slide" id="s11" data-slide="11"
+    data-notes="PACT is within-session structural compression. claude-mem is cross-session episodic memory. Adjacent tools — compose them.">
+    <h2>Adjacent, not competing. Compose them.</h2>
+    <div class="venn-wrap">
+      <svg class="venn" viewBox="0 0 700 340" role="img" aria-label="Venn diagram showing claude-mem handles cross-session memory and PACT handles within-session compression with overlap labeled compose">
+        <circle cx="250" cy="170" r="150" fill="#1c2a3a" stroke="#58a6ff" stroke-width="2" opacity="0.85"/>
+        <circle cx="450" cy="170" r="150" fill="#0a1d0d" stroke="#3fb950" stroke-width="2" opacity="0.85"/>
+        <ellipse cx="350" cy="170" rx="52" ry="130" fill="#1a2a1a" opacity="0.6"/>
+        <text x="170" y="140" text-anchor="middle" fill="#58a6ff" font-family="ui-monospace,monospace" font-size="16" font-weight="700">claude-mem</text>
+        <text x="170" y="162" text-anchor="middle" fill="#8b949e" font-family="ui-monospace,monospace" font-size="13">cross-session</text>
+        <text x="170" y="182" text-anchor="middle" fill="#8b949e" font-family="ui-monospace,monospace" font-size="13">episodic memory</text>
+        <text x="530" y="140" text-anchor="middle" fill="#3fb950" font-family="ui-monospace,monospace" font-size="16" font-weight="700">PACT</text>
+        <text x="530" y="162" text-anchor="middle" fill="#8b949e" font-family="ui-monospace,monospace" font-size="13">within-session</text>
+        <text x="530" y="182" text-anchor="middle" fill="#8b949e" font-family="ui-monospace,monospace" font-size="13">structural compression</text>
+        <text x="350" y="165" text-anchor="middle" fill="#f0f6fc" font-family="ui-monospace,monospace" font-size="12" font-weight="700">compose</text>
+        <text x="350" y="183" text-anchor="middle" fill="#f0f6fc" font-family="ui-monospace,monospace" font-size="11">use both</text>
+      </svg>
+    </div>
+    <div style="margin-top:2vh;color:#8b949e;font-size:clamp(12px,1.4vw,17px)">
+      PACT compresses what you carry <em>now</em>. claude-mem remembers what you learned <em>before</em>.
+    </div>
+  </section>
+
+  <!-- ══ Slide 12 — Closing ══ -->
+  <section class="slide" id="s12" data-slide="12"
+    data-notes="Thank you to the judges. pact-cc is live on npm. Questions welcome.">
+    <div class="credits-scroll">
+      <div style="font-size:clamp(14px,1.6vw,20px);color:#8b949e;margin-bottom:2vh;">Thank you</div>
+      <div class="credits-name">Boris</div>
+      <div class="credits-name">Cat</div>
+      <div class="credits-name">Thariq</div>
+      <div class="credits-name">Lydia</div>
+      <div class="credits-name">Ado</div>
+      <div class="credits-name">Jason</div>
+      <div style="margin:3vh 0;color:#30363d;letter-spacing:0.3em">&#x2500;&#x2500; &#x2500;&#x2500; &#x2500;&#x2500;</div>
+      <div class="credits-links">
+        <a class="credits-link" href="https://github.com/hmatrades/pact-cc" target="_blank" rel="noopener">github.com/hmatrades/pact-cc</a>
+        <a class="credits-link" href="https://npmjs.com/package/pact-cc" target="_blank" rel="noopener">npmjs.com/package/pact-cc</a>
+      </div>
+      <div style="margin-top:3vh;font-size:clamp(11px,1.2vw,15px);color:#8b949e;">
+        <span class="out">$</span> npx pact-cc install
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav id="hud">
+  <span id="counter">1 / 12</span>
+  <span id="progress"><i style="width:8.3%"></i></span>
+</nav>
+
+<div id="overview" role="dialog" aria-modal="true" aria-label="Slide overview"></div>
+<div id="notes-panel" role="note"></div>
+
+<script>
+// ── Core navigation ───────────────────────────────────────
+const slides    = document.querySelectorAll('.slide');
+const counter   = document.getElementById('counter');
+const progBar   = document.querySelector('#progress i');
+const notePanel = document.getElementById('notes-panel');
+let current     = 0;
+
+function show(n) {
+  const prev = current;
+  current = Math.max(0, Math.min(slides.length - 1, n));
+  slides.forEach((s, k) => s.classList.toggle('active', k === current));
+  counter.textContent = (current + 1) + ' / ' + slides.length;
+  progBar.style.width = ((current + 1) / slides.length * 100) + '%';
+  history.replaceState(null, '', '#' + (current + 1));
+  notePanel.textContent = slides[current].dataset.notes || '';
+  onSlideEnter(current, prev);
+}
+
+// ── Per-slide enter animations ────────────────────────────
+const ran = new Set();
+function once(id, fn) { if (!ran.has(id)) { ran.add(id); fn(); } }
+
+function onSlideEnter(idx) {
+  if (idx === 1) once('s2', initSlide2);
+  if (idx === 3) initSlide4();      // always re-run dimming
+  if (idx === 7) once('s8', initSlide8);
+  if (idx === 8) once('s9', initSlide9);
+  if (idx === 9) initSlide10();     // always re-run typewriter
+}
+
+// ── Slide 2: gauge counter ────────────────────────────────
+function initSlide2() {
+  const pctEl  = document.getElementById('gauge-pct');
+  const gauBar = document.getElementById('gauge-bar');
+  if (!pctEl) return;
+  const dur = 4000;
+  const t0  = performance.now();
+  function tick(now) {
+    const p = Math.min((now - t0) / dur, 1);
+    const v = Math.round(p * 100);
+    pctEl.textContent = v + '%';
+    if (gauBar) gauBar.setAttribute('aria-valuenow', v);
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ── Slide 4: word cloud dimming ───────────────────────────
+function initSlide4() {
+  const words = document.querySelectorAll('#cloud-wrap .cloud-word');
+  words.forEach(w => w.classList.remove('dimmed'));
+  let i = 0;
+  function dimNext() {
+    if (i >= words.length) return;
+    words[i].classList.add('dimmed');
+    i++;
+    setTimeout(dimNext, 160);
+  }
+  setTimeout(dimNext, 600);
+}
+
+// ── Slide 8: bar animation ────────────────────────────────
+function initSlide8() {
+  document.querySelectorAll('#bars-wrap .bar-fill').forEach(bar => {
+    bar.style.width = '0%';
+    const target = bar.dataset.target || '0';
+    setTimeout(() => { bar.style.width = target + '%'; }, 150);
+  });
+}
+
+// ── Slide 9: cost odometer ────────────────────────────────
+function initSlide9() {
+  const el = document.getElementById('cost-num');
+  if (!el) return;
+  const target   = 8259.20;
+  const duration = 2400;
+  const t0       = performance.now();
+  function tick(now) {
+    const p     = Math.min((now - t0) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = '$' + (eased * target).toLocaleString('en-US', {
+      minimumFractionDigits: 2, maximumFractionDigits: 2
+    });
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ── Slide 10: typewriter ──────────────────────────────────
+function initSlide10() {
+  const out = document.getElementById('term-out');
+  if (!out) return;
+  // Clear previous run
+  while (out.firstChild) out.removeChild(out.firstChild);
+
+  const lines = [
+    { cls: 'term-cmd',  text: '$ npx pact-cc install',                                           typed: true  },
+    { cls: 'term-ok',   text: '\u2713 PACT installed in /your/project/.claude/settings.json',     typed: false },
+    { cls: 'term-ok',   text: '\u2713 Hook script written to /your/project/.pact/hook.js',         typed: false },
+    { cls: 'term-info', text: '  Token compression activates at 80% context usage.',              typed: false },
+    { cls: 'term-info', text: "  Run 'pact-cc status' to monitor.",                               typed: false },
+  ];
+
+  let li = 0;
+
+  function nextStep() {
+    if (li >= lines.length) {
+      const caret = document.createElement('span');
+      caret.className = 'caret';
+      out.appendChild(caret);
+      return;
+    }
+    const def  = lines[li];
+    const span = document.createElement('span');
+    span.className = def.cls;
+    out.appendChild(span);
+    li++;
+
+    if (def.typed) {
+      let ci = 0;
+      function typeChar() {
+        if (ci <= def.text.length) {
+          span.textContent = def.text.slice(0, ci);
+          ci++;
+          setTimeout(typeChar, 42);
+        } else {
+          setTimeout(nextStep, 220);
+        }
+      }
+      typeChar();
+    } else {
+      span.textContent = def.text;
+      setTimeout(nextStep, 60);
+    }
+  }
+
+  nextStep();
+}
+
+// ── Overview grid (DOM methods, no innerHTML) ─────────────
+const overview = document.getElementById('overview');
+const OV_TITLES = [
+  'Cover','The Wall','The Choice','The Insight',
+  'The Funnel','The Receipt','Scaling','Head-to-Head',
+  'Cost','Install','Why PACT vs claude-mem','Closing'
+];
+
+function buildOverview() {
+  if (overview.childElementCount > 0) return;
+  slides.forEach((s, k) => {
+    const thumb = document.createElement('button');
+    thumb.className = 'ov-thumb';
+    thumb.setAttribute('aria-label', 'Go to slide ' + (k + 1) + ': ' + OV_TITLES[k]);
+
+    const num = document.createElement('span');
+    num.className = 'ov-num';
+    num.textContent = String(k + 1);
+
+    const title = document.createElement('span');
+    title.className = 'ov-title';
+    title.textContent = OV_TITLES[k];
+
+    thumb.appendChild(num);
+    thumb.appendChild(title);
+    thumb.addEventListener('click', () => { toggleOverview(false); show(k); });
+    overview.appendChild(thumb);
+  });
+}
+
+function toggleOverview(force) {
+  const on = (typeof force === 'boolean') ? force : !overview.classList.contains('active');
+  if (on) { buildOverview(); overview.classList.add('active'); }
+  else      overview.classList.remove('active');
+}
+
+// ── Presenter mode ─────────────────────────────────────────
+if (new URLSearchParams(location.search).get('presenter') === '1') {
+  document.body.classList.add('presenter');
+}
+
+// ── Keyboard ──────────────────────────────────────────────
+const keys = {
+  ArrowRight: () => show(current + 1),
+  ' '       : () => show(current + 1),
+  PageDown  : () => show(current + 1),
+  ArrowLeft : () => show(current - 1),
+  PageUp    : () => show(current - 1),
+  Backspace : () => show(current - 1),
+  Home      : () => show(0),
+  End       : () => show(slides.length - 1),
+  Escape    : () => toggleOverview(),
+  f         : () => document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(),
+};
+
+addEventListener('keydown', function(e) {
+  if (e.key >= '1' && e.key <= '9') { e.preventDefault(); show(+e.key - 1); return; }
+  if (e.key === '0')                 { e.preventDefault(); show(9); return; }
+  if (keys[e.key])                   { e.preventDefault(); keys[e.key](); }
+});
+
+// ── Touch / swipe ──────────────────────────────────────────
+var touchX = null;
+document.addEventListener('touchstart', function(e) {
+  touchX = e.touches[0].clientX;
+}, { passive: true });
+document.addEventListener('touchend', function(e) {
+  if (touchX === null) return;
+  var dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) { dx < 0 ? show(current + 1) : show(current - 1); }
+  touchX = null;
+}, { passive: true });
+
+// ── Init ──────────────────────────────────────────────────
+addEventListener('load', function() {
+  var h = parseInt(location.hash.slice(1), 10) - 1;
+  show(isNaN(h) || h < 0 ? 0 : h);
+});
+</script>
+</body>
+</html>

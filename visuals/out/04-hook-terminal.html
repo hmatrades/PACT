@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PACT — Hook Terminal Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d1117;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+  }
+
+  .terminal-wrap {
+    width: min(860px, 96vw);
+  }
+
+  .terminal {
+    background: #161b22;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px #30363d,
+      0 24px 48px rgba(0,0,0,0.6);
+  }
+
+  .chrome {
+    height: 28px;
+    background: #21262d;
+    border-bottom: 1px solid #30363d;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    position: relative;
+  }
+
+  .dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .chrome-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: #484f58;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .body {
+    padding: 16px 20px 20px;
+    min-height: 400px;
+    position: relative;
+  }
+
+  pre#screen {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #c9d1d9;
+    white-space: pre-wrap;
+    word-break: break-word;
+    transition: opacity 0.2s ease;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 7px;
+    height: 13px;
+    background: #3fb950;
+    vertical-align: text-bottom;
+    animation: blink 1s step-end infinite;
+    margin-left: 1px;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .hint {
+    margin-top: 10px;
+    font-size: 10px;
+    color: #30363d;
+    text-align: right;
+    font-family: 'SF Mono', monospace;
+  }
+</style>
+</head>
+<body>
+<div class="terminal-wrap">
+  <div class="terminal">
+    <div class="chrome">
+      <div class="dots">
+        <div class="dot" style="background:#f85149"></div>
+        <div class="dot" style="background:#d29922"></div>
+        <div class="dot" style="background:#3fb950"></div>
+      </div>
+      <span class="chrome-title">~/code/big-refactor &middot; claude code session</span>
+    </div>
+    <div class="body">
+      <pre id="screen"></pre>
+    </div>
+  </div>
+  <div class="hint">space: pause/resume &nbsp;&nbsp; r: restart</div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  const screen = document.getElementById('screen');
+  let paused = false;
+  let pauseResolve = null;
+  let running = false;
+  let restartRequested = false;
+
+  // ── helpers ──────────────────────────────────────────────────────────
+
+  function sleep(ms) {
+    return new Promise(resolve => {
+      if (paused) {
+        pauseResolve = () => { pauseResolve = null; setTimeout(resolve, ms); };
+      } else {
+        setTimeout(resolve, ms);
+      }
+    });
+  }
+
+  async function sleepPausable(ms) {
+    const step = 20;
+    let elapsed = 0;
+    while (elapsed < ms) {
+      if (restartRequested) throw new Error('restart');
+      while (paused) {
+        await new Promise(r => setTimeout(r, 50));
+      }
+      await new Promise(r => setTimeout(r, Math.min(step, ms - elapsed)));
+      elapsed += step;
+    }
+  }
+
+  function span(text, color, bold) {
+    const s = document.createElement('span');
+    s.textContent = text;
+    if (color) s.style.color = color;
+    if (bold) s.style.fontWeight = 'bold';
+    return s;
+  }
+
+  function nl() {
+    screen.appendChild(document.createTextNode('\n'));
+  }
+
+  // ── typewriter ───────────────────────────────────────────────────────
+
+  async function typeInto(el, str, perChar) {
+    if (perChar === undefined) perChar = 12;
+    for (const c of str) {
+      if (restartRequested) throw new Error('restart');
+      while (paused) {
+        await new Promise(r => setTimeout(r, 50));
+      }
+      el.appendChild(document.createTextNode(c));
+      await new Promise(r => setTimeout(r, c === ' ' ? 4 : perChar + Math.random() * 8));
+    }
+  }
+
+  async function typeLine(prefix, prefixColor, rest, restColor, bold) {
+    if (restartRequested) throw new Error('restart');
+    const line = document.createElement('span');
+
+    if (prefix) {
+      const ps = span(prefix, prefixColor, bold);
+      line.appendChild(ps);
+    }
+
+    const rest_s = document.createElement('span');
+    if (restColor) rest_s.style.color = restColor;
+    line.appendChild(rest_s);
+    screen.appendChild(line);
+    nl();
+
+    // type the rest segment
+    await typeInto(rest_s, rest, 11);
+  }
+
+  // type a full line as tag + content (e.g. "[user] ..." styled)
+  async function typeTagLine(tag, tagColor, content, contentColor, perChar) {
+    if (restartRequested) throw new Error('restart');
+    const line = document.createElement('span');
+    const tagS = span(tag, tagColor);
+    line.appendChild(tagS);
+    const contentS = document.createElement('span');
+    if (contentColor) contentS.style.color = contentColor;
+    line.appendChild(contentS);
+    screen.appendChild(line);
+    nl();
+    await typeInto(contentS, content, perChar !== undefined ? perChar : 10);
+  }
+
+  // plain line, typed character by character
+  async function typePlain(text, color, perChar) {
+    if (restartRequested) throw new Error('restart');
+    const line = document.createElement('span');
+    if (color) line.style.color = color;
+    screen.appendChild(line);
+    nl();
+    await typeInto(line, text, perChar !== undefined ? perChar : 10);
+  }
+
+  // instant line
+  function instantLine(text, color, bold) {
+    const s = span(text, color, bold);
+    screen.appendChild(s);
+    nl();
+  }
+
+  // ── gauge ────────────────────────────────────────────────────────────
+
+  function makeGaugeRow(initialTokens, max) {
+    const row = document.createElement('span');
+    row.dataset.last = initialTokens;
+
+    const width = 32;
+    const pct = initialTokens / max;
+    const filled = Math.round(pct * width);
+    const barColor = pct < 0.5 ? '#3fb950' : pct < 0.8 ? '#d29922' : '#f85149';
+
+    row.appendChild(span('[ctx ', '#8b949e'));
+
+    const barS = span(
+      '█'.repeat(filled) + '░'.repeat(width - filled),
+      barColor
+    );
+    barS.className = 'bar';
+    row.appendChild(barS);
+
+    row.appendChild(span('  ', null));
+
+    const countS = span(
+      `${initialTokens.toLocaleString()} / ${max.toLocaleString()} (${Math.round(pct*100)}%)`,
+      '#8b949e'
+    );
+    countS.className = 'count';
+    row.appendChild(countS);
+
+    row.appendChild(span(' ]', '#8b949e'));
+
+    screen.appendChild(row);
+    nl();
+    return row;
+  }
+
+  async function animateGauge(row, target, max) {
+    const width = 32;
+    const start = +row.dataset.last;
+    const steps = 30;
+    const bar = row.querySelector('.bar');
+    const count = row.querySelector('.count');
+
+    for (let i = 1; i <= steps; i++) {
+      if (restartRequested) throw new Error('restart');
+      while (paused) {
+        await new Promise(r => setTimeout(r, 50));
+      }
+      const v = start + (target - start) * (i / steps);
+      const pct = v / max;
+      const filled = Math.round(pct * width);
+      bar.textContent = '█'.repeat(filled) + '░'.repeat(width - filled);
+      bar.style.color = pct < 0.5 ? '#3fb950' : pct < 0.8 ? '#d29922' : '#f85149';
+      count.textContent = `${Math.round(v).toLocaleString()} / ${max.toLocaleString()} (${Math.round(pct*100)}%)`;
+      await new Promise(r => setTimeout(r, 14));
+    }
+    row.dataset.last = target;
+  }
+
+  // ── spinner ──────────────────────────────────────────────────────────
+
+  async function spinner(durationMs) {
+    const frames = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+    const spinLine = document.createElement('span');
+    spinLine.style.color = '#8b949e';
+
+    const prefix = span('  \u25b8 extracting structured JSON via Haiku ', '#8b949e');
+    spinLine.appendChild(prefix);
+
+    const spinChar = document.createTextNode(frames[0]);
+    spinLine.appendChild(spinChar);
+
+    screen.appendChild(spinLine);
+    nl();
+
+    const end = Date.now() + durationMs;
+    let fi = 0;
+    while (Date.now() < end) {
+      if (restartRequested) throw new Error('restart');
+      while (paused) {
+        await new Promise(r => setTimeout(r, 50));
+      }
+      fi = (fi + 1) % frames.length;
+      spinChar.textContent = frames[fi];
+      await new Promise(r => setTimeout(r, 80));
+    }
+    return spinLine;
+  }
+
+  // ── main session ─────────────────────────────────────────────────────
+
+  async function runSession() {
+    const MAX = 200000;
+
+    // [user]
+    await typeTagLine('[user] ', '#58a6ff', 'Refactor the auth system to use httpOnly cookies', '#f0f6fc');
+    await sleepPausable(200);
+
+    // [claude]
+    await typeTagLine('[claude] ', '#d29922', "I'll read the relevant files first.", '#f0f6fc');
+    await sleepPausable(150);
+
+    // tools
+    await typeTagLine('[tool] ', '#a371f7', 'Read src/auth/jwt.ts', '#f0f6fc', 9);
+    await sleepPausable(80);
+    await typeTagLine('[tool] ', '#a371f7', 'Read src/middleware/auth.ts', '#f0f6fc', 9);
+    await sleepPausable(120);
+
+    // [claude] multiline
+    await typeTagLine('[claude] ', '#d29922', 'Found token generation at jwt.ts:45. Plan: extract cookie utilities,', '#f0f6fc');
+    await typePlain('         refactor generateToken, update middleware to read from req.cookies.', '#f0f6fc');
+    await sleepPausable(120);
+
+    // tools
+    await typeTagLine('[tool] ', '#a371f7', 'Write src/utils/cookies.ts', '#f0f6fc', 9);
+    await sleepPausable(70);
+    await typeTagLine('[tool] ', '#a371f7', 'Edit src/auth/jwt.ts', '#f0f6fc', 9);
+    await sleepPausable(80);
+
+    // elided
+    await typePlain('... 14 tool calls elided ...', '#484f58', 7);
+    await sleepPausable(300);
+
+    // first gauge — 39%
+    const g1 = makeGaugeRow(0, MAX);
+    await animateGauge(g1, 78341, MAX);
+    await sleepPausable(400);
+
+    // continuing
+    await typePlain('... continuing work ...', '#484f58', 7);
+    await sleepPausable(280);
+
+    // second gauge — 68%
+    const g2 = makeGaugeRow(78341, MAX);
+    await animateGauge(g2, 137200, MAX);
+    await sleepPausable(400);
+
+    // stretching
+    await typePlain('... session stretches on ...', '#484f58', 7);
+    await sleepPausable(280);
+
+    // third gauge — 80%
+    const g3 = makeGaugeRow(137200, MAX);
+    await animateGauge(g3, 159040, MAX);
+    await sleepPausable(400);
+
+    nl(); // blank line before hook
+
+    // ── hook fires ──
+    await sleepPausable(400);
+    await typePlain('\u2192 PreToolUse hook fires: pact-cc compress', '#3fb950', 11);
+    await sleepPausable(200);
+
+    // spinner line
+    const spinEl = await spinner(820);
+    await sleepPausable(80);
+
+    // replace spinner line content with jsonToPACT line
+    // remove children and replace text
+    while (spinEl.firstChild) spinEl.removeChild(spinEl.firstChild);
+    spinEl.appendChild(span('  \u25b8 jsonToPACT() \u2192 94 tokens (6.2\u00d7 ratio)', '#8b949e'));
+
+    await sleepPausable(180);
+    await typePlain('  \u25b8 engine validation \u2713', '#8b949e', 9);
+    await sleepPausable(150);
+    await typePlain('  \u25b8 injecting prompt_inject into next tool call', '#8b949e', 9);
+    await sleepPausable(400);
+
+    nl(); // blank line
+
+    // gauge drops to 13%
+    const g4 = makeGaugeRow(159040, MAX);
+    await animateGauge(g4, 26110, MAX);
+
+    nl(); // blank line
+
+    await sleepPausable(300);
+
+    // continuation block
+    await typeTagLine('[claude] ', '#d29922', 'Continuing. State carried: goal=jwt-to-cookies. Done:', '#f0f6fc');
+    await typePlain('         [src/auth/jwt.ts, src/utils/cookies.ts]. Next: update-middleware.', '#f0f6fc');
+    await sleepPausable(150);
+    await typeTagLine('[tool] ', '#a371f7', 'Edit src/middleware/auth.ts', '#f0f6fc', 9);
+    await sleepPausable(80);
+    await typeTagLine('[tool] ', '#a371f7', 'Bash: npm test', '#f0f6fc', 9);
+    await sleepPausable(600);
+    await typeTagLine('[tool] ', '#a371f7', '\u2713 all tests pass', '#3fb950', 9);
+
+    // ── loop ──
+    await sleepPausable(4000);
+
+    // fade out
+    screen.style.opacity = '1';
+    screen.style.transition = 'opacity 0.2s ease';
+    screen.style.opacity = '0';
+    await sleepPausable(220);
+
+    // clear
+    while (screen.firstChild) screen.removeChild(screen.firstChild);
+    screen.style.transition = 'none';
+    screen.style.opacity = '1';
+
+    await sleepPausable(300);
+  }
+
+  async function loop() {
+    while (true) {
+      restartRequested = false;
+      running = true;
+      try {
+        await runSession();
+      } catch (e) {
+        if (e.message !== 'restart') throw e;
+        // clean up for restart
+        while (screen.firstChild) screen.removeChild(screen.firstChild);
+        screen.style.opacity = '1';
+        await new Promise(r => setTimeout(r, 300));
+      }
+    }
+  }
+
+  // ── keyboard ─────────────────────────────────────────────────────────
+
+  document.addEventListener('keydown', function(e) {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      paused = !paused;
+      if (!paused && pauseResolve) pauseResolve();
+    }
+    if (e.key === 'r' || e.key === 'R') {
+      restartRequested = true;
+      paused = false;
+      if (pauseResolve) pauseResolve();
+    }
+  });
+
+  // ── start ────────────────────────────────────────────────────────────
+
+  loop();
+
+})();
+</script>
+</body>
+</html>

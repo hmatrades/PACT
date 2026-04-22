@@ -258,6 +258,7 @@
       <a href="#how">how</a>
       <a href="#benchmarks">benchmarks</a>
       <a href="#install">install</a>
+      <a href="#demos">demos</a>
     </nav>
   </div>
 </div>
@@ -519,6 +520,49 @@ to read from req.cookies...
     <h2>How it works</h2>
     <p>The PACT engine is a compact scripting language. Agent context encodes as a PACT program — entity graphs, file states, plan steps, constraints. Connective tissue (prose, narrative, repeated context) gets stripped. What remains is a lossless structural encoding.</p>
     <p>When the model needs to reason about a specific entity, the relevant subgraph rehydrates to full natural language at query time. Compression is for what's <em>carried</em>, not what's <em>read</em>. The model always sees complete context for what it's working on.</p>
+  </div>
+</section>
+
+<!-- ─── DEMOS ─── -->
+<section id="demos">
+  <div class="wrap">
+    <h2>Demos</h2>
+    <p class="dim">Interactive and visual artifacts generated from real PACT data. All reproducible locally.</p>
+    <table>
+      <thead>
+        <tr><th>Visual</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="../visuals/out/01-slideshow/index.html" target="_blank">01-slideshow</a></td>
+          <td>12-slide pitch deck — full keyboard nav, enter animations, embedded live demos</td>
+        </tr>
+        <tr>
+          <td><a href="../visuals/out/02-funnel.svg" target="_blank">02-funnel.svg</a></td>
+          <td>Animated compression funnel — watch 418 KB collapse to 1.2 KB</td>
+        </tr>
+        <tr>
+          <td><a href="../visuals/out/03-scaling-race.html" target="_blank">03-scaling-race.html</a></td>
+          <td>PACT vs baseline scaling race — interactive, 200 turns, BARUTU SNAKE badge at turn 179</td>
+        </tr>
+        <tr>
+          <td><a href="../visuals/out/04-hook-terminal.html" target="_blank">04-hook-terminal.html</a></td>
+          <td>Scripted Claude Code session — context gauge hits 80%, hook fires, drops to 13%</td>
+        </tr>
+        <tr>
+          <td><a href="../visuals/out/05-savings-odometer.html" target="_blank">05-savings-odometer.html</a></td>
+          <td>Team savings odometer — $8,259/yr ticking up from $0</td>
+        </tr>
+        <tr>
+          <td><a href="../visuals/out/06-architecture.svg" target="_blank">06-architecture.svg</a></td>
+          <td>Architecture pipeline diagram — 3-stage flow with animated particles</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:1.5em;padding:0.75em 1em;background:#0d1117;border:1px solid #238636;border-radius:6px;font-family:var(--mono);font-size:0.85em;color:#3fb950">
+      ⟳ BARUTU SNAKE — <span style="color:#e6edf3">task 012: PACT compressed the session that built PACT. 179 turns. 34.3× lossless.</span><br>
+      <span style="color:#8b949e">node benchmarks/run.mjs --tasks 012-barutu-snake</span>
+    </div>
   </div>
 </section>
 

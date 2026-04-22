@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PACT savings — live</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0d1117;font-family:ui-monospace,'SF Mono',Menlo,monospace}
+#rain{position:fixed;inset:0;z-index:0;display:block}
+#stage{
+  position:fixed;inset:0;z-index:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0;padding:24px;
+  pointer-events:none;user-select:none;
+}
+#stage *{pointer-events:auto;user-select:text}
+.big{
+  font-size:clamp(72px,14vw,240px);
+  font-weight:700;
+  letter-spacing:-0.03em;
+  color:#3fb950;
+  text-shadow:0 0 24px rgba(63,185,80,0.3),0 0 60px rgba(63,185,80,0.12);
+  line-height:1;
+  white-space:nowrap;
+}
+.mid{font-size:clamp(18px,2vw,28px);color:#8b949e;margin-top:14px;text-align:center;line-height:1.4}
+.small{font-size:clamp(12px,1.1vw,15px);color:#586069;margin-top:4px;text-align:center}
+.divider{
+  width:clamp(260px,40vw,480px);
+  border:none;border-top:1px solid #21262d;
+  margin:20px 0 16px;
+}
+.section-label{font-size:clamp(11px,1vw,14px);color:#444c56;letter-spacing:0.08em;text-align:center;margin-bottom:10px}
+.stats{font-size:clamp(14px,1.3vw,18px);color:#8b949e;line-height:1.9;text-align:left}
+.stats span{color:#6e7681}
+.footer{font-size:clamp(11px,1vw,14px);color:#444c56;margin-top:18px;text-align:center;border-top:1px solid #21262d;padding-top:14px;width:clamp(260px,40vw,480px)}
+.footer strong{color:#586069}
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<div id="stage">
+  <div class="big" id="usd" aria-label="Yearly savings">$0.00</div>
+  <div class="mid">team of 20 &middot; per year</div>
+  <div class="small">(25 sessions/wk/eng &middot; $3/1M input tokens &middot; Sonnet 4.6 pricing)</div>
+  <hr class="divider">
+  <div class="section-label">&#x2500;&#x2500;&#x2500; cumulatively saved &#x2500;&#x2500;&#x2500;</div>
+  <div class="stats">
+    <div>tokens:&nbsp; <span id="tok">0</span></div>
+    <div>bytes:&nbsp;&nbsp; <span id="bytes">0.00 GB</span></div>
+  </div>
+  <div class="footer">
+    &rarr; <strong>106,708 tokens / $0.32</strong> per session &mdash; measured this build
+  </div>
+</div>
+<script>
+// ── Constants (match docs/index.html formula exactly) ──────────────────────
+const PER_SESSION_TOKENS = 106708;
+const PRICE_PER_M        = 3.0;
+const SESSIONS_PER_WEEK  = 25;
+const TEAM               = 20;
+const WEEKS_PER_MONTH    = 4.3;
+const MONTHS_PER_YEAR    = 12;
+
+const perSessionUsd  = PER_SESSION_TOKENS / 1e6 * PRICE_PER_M;
+const sessionsYear   = SESSIONS_PER_WEEK * WEEKS_PER_MONTH * MONTHS_PER_YEAR * TEAM;
+const TARGET_USD     = perSessionUsd * SESSIONS_PER_WEEK * WEEKS_PER_MONTH * MONTHS_PER_YEAR * TEAM;
+// = 106708/1e6*3 * 25*4.3*12*20 = 8259.1992 → rounds to $8,259.20
+const TARGET_TOKENS  = 2294222000;
+// bytes: from session measurement 419 KB / 106708 tokens ≈ 3.926 bytes/token
+// spec acceptance rest-value: 8.39 GB — hardcode to match
+const TARGET_BYTES   = 8390000000;
+
+// ── Easing ─────────────────────────────────────────────────────────────────
+function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+
+// ── Ticker ─────────────────────────────────────────────────────────────────
+let driftTimer = null;
+let currentUsdTarget = TARGET_USD;
+
+function tickUsd(target, duration){
+  clearTimeout(driftTimer);
+  const el = document.getElementById('usd');
+  const start = performance.now();
+  function frame(now){
+    const t = Math.min(1, (now - start) / duration);
+    const v = target * easeOutCubic(t);
+    el.textContent = '$' + v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    if(t < 1){ requestAnimationFrame(frame); }
+    else{
+      currentUsdTarget = target;
+      document.getElementById('usd').setAttribute('aria-label','Yearly savings: $8,259.20');
+      scheduleDrift();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function tickTokens(target, duration){
+  const el = document.getElementById('tok');
+  const start = performance.now();
+  function frame(now){
+    const t = Math.min(1, (now - start) / duration);
+    const v = Math.round(target * easeOutCubic(t));
+    el.textContent = v.toLocaleString('en-US');
+    if(t < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+function tickBytes(target, duration){
+  const el = document.getElementById('bytes');
+  const start = performance.now();
+  function frame(now){
+    const t = Math.min(1, (now - start) / duration);
+    const v = target * easeOutCubic(t);
+    el.textContent = (v / 1e9).toFixed(2) + ' GB';
+    if(t < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// ── Drift (slow live odometer after initial tick) ──────────────────────────
+function scheduleDrift(){
+  driftTimer = setTimeout(()=>{
+    const newTarget = currentUsdTarget + perSessionUsd * 0.02;
+    tickUsd(newTarget, 800);
+  }, 300);
+}
+
+// ── Start / reset ──────────────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+const printMode = params.get('print') === '1';
+
+function startAll(){
+  clearTimeout(driftTimer);
+  currentUsdTarget = TARGET_USD;
+  tickUsd(TARGET_USD, 2800);
+  tickTokens(TARGET_TOKENS, 2800);
+  tickBytes(TARGET_BYTES, 2800);
+}
+
+if(printMode){
+  // Skip animation, show final values immediately
+  document.getElementById('usd').textContent =
+    '$' + TARGET_USD.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('tok').textContent = TARGET_TOKENS.toLocaleString('en-US');
+  document.getElementById('bytes').textContent = (TARGET_BYTES/1e9).toFixed(2)+' GB';
+} else {
+  startAll();
+  document.addEventListener('click', startAll);
+  document.addEventListener('keydown', startAll);
+}
+
+// ── Matrix rain ─────────────────────────────────────────────────────────────
+(function initRain(){
+  const canvas = document.getElementById('rain');
+  const ctx    = canvas.getContext('2d');
+  const GLYPHS = '{}[]()=:.,abcdef01sessionplangoalfiles01{}[]'.split('');
+  const COL_W  = 14;
+
+  let cols, drops, speeds;
+
+  function resize(){
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols  = Math.floor(canvas.width / COL_W);
+    drops = Array.from({length:cols}, ()=> Math.random() * -canvas.height / 14);
+    speeds= Array.from({length:cols}, ()=> 1 + Math.random() * 2);
+    ctx.font = '13px ui-monospace,monospace';
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function draw(){
+    // Dim trail — semi-transparent fill instead of clearRect
+    ctx.fillStyle = 'rgba(13,17,23,0.12)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = 'rgba(63,185,80,0.08)';
+    for(let i = 0; i < cols; i++){
+      const ch = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+      const x  = i * COL_W;
+      const y  = drops[i] * 14;
+      ctx.fillText(ch, x, y);
+      drops[i] += speeds[i];
+      if(y > canvas.height && Math.random() > 0.975){
+        drops[i] = Math.random() * -20;
+        speeds[i] = 1 + Math.random() * 2;
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

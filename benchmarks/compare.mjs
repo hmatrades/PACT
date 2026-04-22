@@ -160,7 +160,7 @@ async function main() {
 
   // Print
   console.log(`\n=== PACT vs SEMANTIC-MEMORY BASELINES ===`)
-  console.log(`11 tasks · 227 total turns · threshold ${THRESHOLD} tokens\n`)
+  console.log(`${tasks.length} tasks · ${tasks.reduce((s, t) => s + t.turns.length, 0)} total turns · threshold ${THRESHOLD} tokens\n`)
 
   const baseTotal = perStrategy.baseline.total
   console.log('strategy'.padEnd(18), 'total'.padStart(10), 'ratio'.padStart(8), 'notes')

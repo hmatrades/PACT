@@ -1,0 +1,375 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 600" width="1400" height="600"
+     font-family="ui-monospace, SF Mono, Menlo, monospace">
+  <title>PACT compression funnel · session.md → session.pact</title>
+  <defs>
+    <linearGradient id="mdGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#58a6ff"/>
+      <stop offset="1" stop-color="#1f6feb"/>
+    </linearGradient>
+    <linearGradient id="pactGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3fb950"/>
+      <stop offset="1" stop-color="#238636"/>
+    </linearGradient>
+    <linearGradient id="funnelGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#21262d" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#161b22" stop-opacity="0.95"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowStrong" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="pillGlow" x="-60%" y="-100%" width="220%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur">
+        <animate attributeName="stdDeviation" values="2;4;2" dur="3s" repeatCount="indefinite"/>
+      </feGaussianBlur>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="funnelClip">
+      <path d="M 420 130 L 840 130 L 700 320 L 560 320 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="600" fill="#0d1117"/>
+
+  <!-- Title -->
+  <g>
+    <title>Header title and subtitle</title>
+    <text x="700" y="38" fill="#f0f6fc" font-size="20" font-weight="700" text-anchor="middle">PACT compression funnel · session.md → session.pact</text>
+    <text x="700" y="60" fill="#8b949e" font-size="12" text-anchor="middle">418 KB of live conversation reduced to 1.19 KB of structured state · 352× smaller · engine-validated</text>
+  </g>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- LEFT: session.md input file icon                          -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <g transform="translate(100,130)">
+    <title>Input file session.md — 418 KB rendered conversation</title>
+    <text x="120" y="-14" fill="#8b949e" font-size="11" text-anchor="middle">input</text>
+    <rect x="60" y="0" width="120" height="210" rx="6" fill="url(#mdGrad)" filter="url(#glow)" opacity="0.95"/>
+    <rect x="60" y="0" width="120" height="210" rx="6" fill="none" stroke="#58a6ff" stroke-width="1.5" opacity="0.9"/>
+    <path d="M 160 0 L 180 20 L 160 20 Z" fill="#1f6feb" stroke="#58a6ff" stroke-width="1"/>
+    <text x="120" y="24" fill="#f0f6fc" font-size="11" font-weight="700" text-anchor="middle">session.md</text>
+    <!-- static prose lines -->
+    <g fill="#ffffff" opacity="0.2">
+      <rect x="76" y="36" width="70" height="3"/>
+      <rect x="76" y="48" width="88" height="2"/>
+      <rect x="76" y="58" width="60" height="2"/>
+      <rect x="76" y="68" width="82" height="2"/>
+      <rect x="76" y="78" width="74" height="2"/>
+      <rect x="76" y="88" width="88" height="2"/>
+      <rect x="76" y="98" width="52" height="2"/>
+      <rect x="76" y="108" width="80" height="2"/>
+      <rect x="76" y="118" width="68" height="2"/>
+      <rect x="76" y="128" width="86" height="2"/>
+      <rect x="76" y="138" width="72" height="2"/>
+      <rect x="76" y="148" width="64" height="2"/>
+      <rect x="76" y="158" width="84" height="2"/>
+      <rect x="76" y="168" width="58" height="2"/>
+      <rect x="76" y="178" width="80" height="2"/>
+    </g>
+    <text x="120" y="230" fill="#58a6ff" font-size="16" font-weight="700" text-anchor="middle">418 KB</text>
+    <text x="120" y="248" fill="#8b949e" font-size="10" text-anchor="middle">rendered conversation</text>
+    <text x="120" y="262" fill="#8b949e" font-size="10" text-anchor="middle">~107,013 BPE tokens</text>
+  </g>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- PART 1: Detaching prose lines from session.md             -->
+  <!-- Absolute coords: file rect is ~x160–280, y=130–340        -->
+  <!-- Lines peel off rightward toward funnel mouth x≈420        -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <g>
+    <title>Prose lines detaching from session.md and sliding into funnel</title>
+    <!-- Line 1 -->
+    <rect x="176" y="166" width="70" height="3" fill="#58a6ff" opacity="0">
+      <animate attributeName="x" from="176" to="420" dur="1.2s" begin="0s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.7;0.5;0" dur="1.2s" begin="0s" repeatCount="indefinite"/>
+    </rect>
+    <!-- Line 2 -->
+    <rect x="176" y="178" width="60" height="2" fill="#58a6ff" opacity="0">
+      <animate attributeName="x" from="176" to="420" dur="1.2s" begin="0.15s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.7;0.5;0" dur="1.2s" begin="0.15s" repeatCount="indefinite"/>
+    </rect>
+    <!-- Line 3 -->
+    <rect x="176" y="188" width="75" height="3" fill="#58a6ff" opacity="0">
+      <animate attributeName="x" from="176" to="420" dur="1.2s" begin="0.3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.7;0.5;0" dur="1.2s" begin="0.3s" repeatCount="indefinite"/>
+    </rect>
+    <!-- Line 4 -->
+    <rect x="176" y="198" width="55" height="2" fill="#58a6ff" opacity="0">
+      <animate attributeName="x" from="176" to="420" dur="1.2s" begin="0.45s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.7;0.5;0" dur="1.2s" begin="0.45s" repeatCount="indefinite"/>
+    </rect>
+    <!-- Line 5 -->
+    <rect x="176" y="208" width="80" height="3" fill="#58a6ff" opacity="0">
+      <animate attributeName="x" from="176" to="420" dur="1.2s" begin="0.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.7;0.5;0" dur="1.2s" begin="0.6s" repeatCount="indefinite"/>
+    </rect>
+    <!-- Line 6 -->
+    <rect x="176" y="218" width="65" height="2" fill="#58a6ff" opacity="0">
+      <animate attributeName="x" from="176" to="420" dur="1.2s" begin="0.75s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.7;0.5;0" dur="1.2s" begin="0.75s" repeatCount="indefinite"/>
+    </rect>
+    <!-- Line 7 -->
+    <rect x="176" y="228" width="72" height="3" fill="#58a6ff" opacity="0">
+      <animate attributeName="x" from="176" to="420" dur="1.2s" begin="0.9s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.7;0.5;0" dur="1.2s" begin="0.9s" repeatCount="indefinite"/>
+    </rect>
+    <!-- Line 8 -->
+    <rect x="176" y="238" width="58" height="2" fill="#58a6ff" opacity="0">
+      <animate attributeName="x" from="176" to="420" dur="1.2s" begin="1.05s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.7;0.5;0" dur="1.2s" begin="1.05s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- Arrow from md into funnel -->
+  <g stroke="#58a6ff" stroke-width="2" fill="none" opacity="0.7">
+    <path d="M 280 235 L 415 235" stroke-dasharray="6 4"/>
+    <polygon points="415,235 405,229 405,241" fill="#58a6ff" stroke="none"/>
+  </g>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- FUNNEL SHAPE                                              -->
+  <!-- Wide mouth: x 420–840 at y=130                           -->
+  <!-- Neck: x 560–700 at y=320, rect extending to x≈840        -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <g>
+    <title>Compression funnel body</title>
+    <!-- Funnel body trapezoid -->
+    <path d="M 420 130 L 840 130 L 700 320 L 560 320 Z" fill="url(#funnelGrad)" stroke="#30363d" stroke-width="2"/>
+    <!-- Neck rect -->
+    <rect x="560" y="318" width="280" height="26" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+    <!-- Inner convergence lines -->
+    <g stroke="#30363d" stroke-width="1" opacity="0.45">
+      <line x1="480" y1="130" x2="580" y2="320"/>
+      <line x1="560" y1="130" x2="610" y2="320"/>
+      <line x1="630" y1="130" x2="630" y2="320"/>
+      <line x1="700" y1="130" x2="650" y2="320"/>
+      <line x1="780" y1="130" x2="660" y2="320"/>
+    </g>
+    <!-- Funnel top labels -->
+    <text x="630" y="114" fill="#d29922" font-size="11" text-anchor="middle">[ Haiku: extract structured JSON ]</text>
+    <text x="630" y="128" fill="#d29922" font-size="9" text-anchor="middle">↓ jsonToPACT() · deterministic encoder</text>
+    <!-- Funnel bottom labels -->
+    <text x="630" y="362" fill="#8b949e" font-size="10" text-anchor="middle">~70% connective tissue dropped</text>
+    <text x="630" y="376" fill="#8b949e" font-size="10" text-anchor="middle">lossless on files · plan · entities · constraints</text>
+  </g>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- PART 2: Ghost-text fragments drifting inside funnel       -->
+  <!-- They move from wide mouth toward neck, fading out         -->
+  <!-- Clipped to funnel area roughly                            -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <g clip-path="url(#funnelClip)">
+    <title>Ghost prose fragments drifting and fading inside the funnel</title>
+    <!-- Fragment 1: "## user" — left side, drifts right+down -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="430,150" to="570,305" dur="2.4s" begin="0s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0.5;0" dur="2.4s" begin="0s" repeatCount="indefinite"/>
+      ## user
+    </text>
+    <!-- Fragment 2: "build it my love" -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="490,165" to="600,308" dur="2.8s" begin="0.3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;0.4;0" dur="2.8s" begin="0.3s" repeatCount="indefinite"/>
+      build it my love
+    </text>
+    <!-- Fragment 3: "## assistant" — right side -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="720,145" to="640,310" dur="2.6s" begin="0.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.75;0.3;0" dur="2.6s" begin="0.6s" repeatCount="indefinite"/>
+      ## assistant
+    </text>
+    <!-- Fragment 4: "Reading files..." -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="780,160" to="660,312" dur="2.2s" begin="0.9s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0.4;0" dur="2.2s" begin="0.9s" repeatCount="indefinite"/>
+      Reading files...
+    </text>
+    <!-- Fragment 5: "Edit src/cli.ts" -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="540,180" to="585,308" dur="3.0s" begin="1.2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;0.35;0" dur="3.0s" begin="1.2s" repeatCount="indefinite"/>
+      Edit src/cli.ts
+    </text>
+    <!-- Fragment 6: "npm test" -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="680,175" to="635,306" dur="2.5s" begin="1.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.85;0.4;0" dur="2.5s" begin="1.5s" repeatCount="indefinite"/>
+      npm test
+    </text>
+    <!-- Fragment 7: "140 tests pass" -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="450,200" to="575,310" dur="2.7s" begin="0.2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.65;0.3;0" dur="2.7s" begin="0.2s" repeatCount="indefinite"/>
+      140 tests pass
+    </text>
+    <!-- Fragment 8: "## tool_use" -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="810,148" to="665,314" dur="2.9s" begin="0.8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;0.3;0" dur="2.9s" begin="0.8s" repeatCount="indefinite"/>
+      ## tool_use
+    </text>
+    <!-- Fragment 9: "commit abf5fea" -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="600,155" to="615,312" dur="3.1s" begin="0.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.75;0.35;0" dur="3.1s" begin="0.5s" repeatCount="indefinite"/>
+      commit abf5fea
+    </text>
+    <!-- Fragment 10: "continuing..." -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="760,185" to="645,309" dur="2.3s" begin="1.8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0.3;0" dur="2.3s" begin="1.8s" repeatCount="indefinite"/>
+      continuing...
+    </text>
+    <!-- Fragment 11: "benchmarks/run.mjs" -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="470,215" to="572,307" dur="2.6s" begin="2.1s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;0.25;0" dur="2.6s" begin="2.1s" repeatCount="indefinite"/>
+      benchmarks/run.mjs
+    </text>
+    <!-- Fragment 12: "as I mentioned" -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="700,200" to="638,311" dur="2.8s" begin="1.0s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.65;0.2;0" dur="2.8s" begin="1.0s" repeatCount="indefinite"/>
+      as I mentioned
+    </text>
+    <!-- Fragment 13: "chart-compare.svg" -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="550,230" to="590,313" dur="2.4s" begin="2.4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;0.3;0" dur="2.4s" begin="2.4s" repeatCount="indefinite"/>
+      chart-compare.svg
+    </text>
+    <!-- Fragment 14: "going back to" -->
+    <text font-size="9" fill="#58a6ff">
+      <animateTransform attributeName="transform" type="translate" from="820,170" to="658,316" dur="3.2s" begin="0.4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;0.2;0" dur="3.2s" begin="0.4s" repeatCount="indefinite"/>
+      going back to
+    </text>
+  </g>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- PART 3: Green particles shooting out the neck             -->
+  <!-- Neck is x 560–840 at y≈331 center                        -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <g>
+    <title>Green particles shooting through funnel neck representing surviving structured state</title>
+    <!-- Particle 1 + trail -->
+    <circle cx="560" cy="331" r="3.5" fill="#3fb950" opacity="0.3">
+      <animate attributeName="cx" from="560" to="840" dur="1.6s" begin="0s" repeatCount="indefinite"/>
+      <animate attributeName="cy" from="331" to="329" dur="1.6s" begin="0s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.3;0.3;0" dur="1.6s" begin="0s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="560" cy="331" r="2" fill="#3fb950">
+      <animate attributeName="cx" from="560" to="840" dur="1.6s" begin="0.08s" repeatCount="indefinite"/>
+      <animate attributeName="cy" from="331" to="329" dur="1.6s" begin="0.08s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="1.6s" begin="0.08s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Particle 2 + trail -->
+    <circle cx="560" cy="331" r="3.5" fill="#3fb950" opacity="0.3">
+      <animate attributeName="cx" from="560" to="840" dur="1.6s" begin="0.26s" repeatCount="indefinite"/>
+      <animate attributeName="cy" from="331" to="333" dur="1.6s" begin="0.26s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.3;0.3;0" dur="1.6s" begin="0.26s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="560" cy="331" r="2" fill="#3fb950">
+      <animate attributeName="cx" from="560" to="840" dur="1.6s" begin="0.34s" repeatCount="indefinite"/>
+      <animate attributeName="cy" from="331" to="333" dur="1.6s" begin="0.34s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="1.6s" begin="0.34s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Particle 3 + trail -->
+    <circle cx="560" cy="331" r="3.5" fill="#3fb950" opacity="0.3">
+      <animate attributeName="cx" from="560" to="840" dur="1.6s" begin="0.53s" repeatCount="indefinite"/>
+      <animate attributeName="cy" from="331" to="330" dur="1.6s" begin="0.53s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.3;0.3;0" dur="1.6s" begin="0.53s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="560" cy="331" r="2" fill="#3fb950">
+      <animate attributeName="cx" from="560" to="840" dur="1.6s" begin="0.61s" repeatCount="indefinite"/>
+      <animate attributeName="cy" from="331" to="330" dur="1.6s" begin="0.61s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="1.6s" begin="0.61s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Particle 4 + trail -->
+    <circle cx="560" cy="331" r="3.5" fill="#3fb950" opacity="0.3">
+      <animate attributeName="cx" from="560" to="840" dur="1.6s" begin="0.8s" repeatCount="indefinite"/>
+      <animate attributeName="cy" from="331" to="334" dur="1.6s" begin="0.8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.3;0.3;0" dur="1.6s" begin="0.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="560" cy="331" r="2" fill="#3fb950">
+      <animate attributeName="cx" from="560" to="840" dur="1.6s" begin="0.88s" repeatCount="indefinite"/>
+      <animate attributeName="cy" from="331" to="334" dur="1.6s" begin="0.88s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="1.6s" begin="0.88s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Particle 5 + trail -->
+    <circle cx="560" cy="331" r="3.5" fill="#3fb950" opacity="0.3">
+      <animate attributeName="cx" from="560" to="840" dur="1.6s" begin="1.06s" repeatCount="indefinite"/>
+      <animate attributeName="cy" from="331" to="329" dur="1.6s" begin="1.06s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.3;0.3;0" dur="1.6s" begin="1.06s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="560" cy="331" r="2" fill="#3fb950">
+      <animate attributeName="cx" from="560" to="840" dur="1.6s" begin="1.14s" repeatCount="indefinite"/>
+      <animate attributeName="cy" from="331" to="329" dur="1.6s" begin="1.14s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="1.6s" begin="1.14s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Particle 6 + trail -->
+    <circle cx="560" cy="331" r="3.5" fill="#3fb950" opacity="0.3">
+      <animate attributeName="cx" from="560" to="840" dur="1.6s" begin="1.33s" repeatCount="indefinite"/>
+      <animate attributeName="cy" from="331" to="332" dur="1.6s" begin="1.33s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.3;0.3;0" dur="1.6s" begin="1.33s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="560" cy="331" r="2" fill="#3fb950">
+      <animate attributeName="cx" from="560" to="840" dur="1.6s" begin="1.41s" repeatCount="indefinite"/>
+      <animate attributeName="cy" from="331" to="332" dur="1.6s" begin="1.41s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="1.6s" begin="1.41s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Arrow from funnel neck to pact output -->
+  <g stroke="#3fb950" stroke-width="2" fill="none" opacity="0.85">
+    <path d="M 840 331 L 1060 270" stroke-dasharray="6 4"/>
+    <polygon points="1060,270 1047,264 1047,276" fill="#3fb950" stroke="none"/>
+  </g>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- PART 4: Pulsing session.pact output block on the right    -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <g transform="translate(1060,160)">
+    <title>Output file session.pact — 1.19 KB structured state pulsing with glow</title>
+    <text x="110" y="-14" fill="#8b949e" font-size="11" text-anchor="middle">output</text>
+    <!-- Pact file icon -->
+    <g filter="url(#glowStrong)">
+      <rect x="60" y="0" width="100" height="28" rx="4" fill="url(#pactGrad)">
+        <animate attributeName="opacity" values="0.88;1;0.88" dur="2.2s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="60" y="0" width="100" height="28" rx="4" fill="none" stroke="#3fb950" stroke-width="1.5"/>
+      <path d="M 145 0 L 160 15 L 145 15 Z" fill="#0d1117" opacity="0.6"/>
+      <text x="110" y="19" fill="#f0f6fc" font-size="10" font-weight="700" text-anchor="middle">session.pact</text>
+    </g>
+    <text x="110" y="52" fill="#3fb950" font-size="18" font-weight="700" text-anchor="middle">1.19 KB</text>
+    <text x="110" y="70" fill="#8b949e" font-size="10" text-anchor="middle">structured state</text>
+    <text x="110" y="84" fill="#8b949e" font-size="10" text-anchor="middle">~305 BPE tokens</text>
+    <!-- PACT snippet underneath -->
+    <g transform="translate(0, 100)" font-size="8.5" fill="#3fb950">
+      <rect x="0" y="0" width="220" height="160" rx="4" fill="#0d1117" stroke="#30363d"/>
+      <text x="10" y="18">session = {</text>
+      <text x="10" y="34" fill="#8b949e"> goal: <tspan fill="#a5d6ff">'ship-pact-hackathon'</tspan></text>
+      <text x="10" y="50" fill="#8b949e"> files: <tspan fill="#a5d6ff">{ 12 paths }</tspan></text>
+      <text x="10" y="66" fill="#8b949e"> plan_done: <tspan fill="#a5d6ff">[12 steps]</tspan></text>
+      <text x="10" y="82" fill="#8b949e"> ...</text>
+      <text x="10" y="98">}</text>
+      <text x="10" y="116" fill="#d29922">. sjson(session)</text>
+    </g>
+  </g>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- PART 5: "352× smaller" pill with glow breathing           -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <g transform="translate(700, 525)">
+    <title>352 times smaller pill with pulsing glow</title>
+    <rect x="-165" y="-30" width="330" height="54" rx="27" fill="#0d1117" stroke="#3fb950" stroke-width="1.5" filter="url(#pillGlow)"/>
+    <text x="0" y="-4" fill="#3fb950" font-size="32" font-weight="bold" text-anchor="middle">352×</text>
+    <text x="0" y="18" fill="#58a6ff" font-size="13" text-anchor="middle">smaller · lossless structural</text>
+  </g>
+
+</svg>
