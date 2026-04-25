@@ -23,14 +23,16 @@
     "LICENSE"
   ],
   "pkg": {
-    "assets": ["pact-engine.js"],
+    "assets": [
+      "pact-engine.js"
+    ],
     "outputPath": "release"
   },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "test:engine": "node --experimental-vm-modules --test src/engine.test.ts",
-    "test": "node --experimental-vm-modules --test src/**/*.test.ts",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "benchmark": "node benchmarks/run.mjs",
     "build:binary": "npx @yao-pkg/pkg dist/cli.cjs --target node20-macos-arm64 --output release/pact --no-signature"
@@ -41,7 +43,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsup": "^8.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.5"
   },
   "engines": {
     "node": ">=18"

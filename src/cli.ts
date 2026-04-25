@@ -4,12 +4,23 @@ import { installPACT, uninstallPACT, readState, computeSavings } from './install
 import { listSessions, readSession } from './session.js'
 import { pack, unpack, inspectPack } from './pack.js'
 import { installCompaction, uninstallCompaction, heuristicCompress } from './compaction.js'
+import { runSetup } from './setup.js'
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2)
   const cmd = args[0]
 
+  if (cmd === '--version' || cmd === '-v') {
+    console.log('pact-cc 1.0.0')
+    return
+  }
+
   switch (cmd) {
+    case 'setup': {
+      await runSetup()
+      break
+    }
+
     case 'install': {
       if (args.includes('--global')) {
         const { hookPath, settingsPath } = installCompaction()
@@ -340,16 +351,15 @@ async function main(): Promise<void> {
       console.log('')
       console.log('  PACT  semantic compression for files and agents')
       console.log('')
+      console.log('  pact setup                           one command. right-click + claude code. done.')
+      console.log('')
       console.log('  pact pack <file|dir> [-o out.pact]   compress file or folder')
       console.log('  pact unpack <file.pact> [-o path]    decompress')
       console.log('  pact inspect <file.pact>             view contents')
       console.log('')
       console.log('  pact install --global                auto-compact every Claude Code session')
-      console.log('  pact install [--threshold 0-1]       hook into current project')
-      console.log('  pact uninstall [--global]            remove hooks')
       console.log('  pact compact [text]                  compress context (heuristic, no API)')
       console.log('  pact status                          compression stats')
-      console.log('  pact benchmark [--tasks N]           run benchmarks')
       console.log('')
     }
   }
@@ -371,7 +381,20 @@ function getFlag(args: string[], flag: string): string | undefined {
 }
 
 main().catch((err: unknown) => {
-  const msg = err instanceof Error ? err.message : String(err)
-  console.error('Error:', msg)
+  const raw = err instanceof Error ? err.message : String(err)
+  let msg = raw
+  if (raw.includes('ENOENT')) {
+    const match = raw.match(/open '([^']+)'/) ?? raw.match(/stat '([^']+)'/) ?? raw.match(/, ([^ ]+)$/)
+    msg = `File not found: ${match?.[1] ?? 'unknown'}`
+  } else if (raw.includes('Not a PACT file')) {
+    msg = 'Not a PACT file. Only .pact files can be unpacked/inspected.'
+  } else if (raw.includes('too small')) {
+    msg = 'Not a PACT file (too small or corrupted).'
+  } else if (raw.includes('Unsupported PACT version')) {
+    msg = raw
+  }
+  console.error('')
+  console.error(`  Error: ${msg}`)
+  console.error('')
   process.exit(1)
 })
