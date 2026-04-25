@@ -1,5 +1,7 @@
 export { compress, decompress } from './compress.js'
 export { install, uninstall, status } from './install.js'
+export { pack, unpack, inspectPack } from './pack.js'
+export type { PackResult, UnpackResult, PackInfo } from './pack.js'
 
 export type CompressResult = {
   pact: string

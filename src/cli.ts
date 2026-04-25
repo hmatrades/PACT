@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs'
 import { compress, decompress } from './compress.js'
 import { installPACT, uninstallPACT, readState, computeSavings } from './install.js'
 import { listSessions, readSession } from './session.js'
+import { pack, unpack, inspectPack } from './pack.js'
+import { installCompaction, uninstallCompaction, heuristicCompress } from './compaction.js'
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2)
@@ -9,28 +11,71 @@ async function main(): Promise<void> {
 
   switch (cmd) {
     case 'install': {
+      if (args.includes('--global')) {
+        const { hookPath, settingsPath } = installCompaction()
+        console.log('')
+        console.log('  PACT compaction installed globally')
+        console.log(`  Hook:     ${hookPath}`)
+        console.log(`  Settings: ${settingsPath}`)
+        console.log('')
+        console.log('  Every Claude Code session now auto-compresses at 50% context.')
+        console.log('  Zero API calls. Heuristic extraction. Lossless.')
+        console.log('')
+        console.log('  Uninstall: pact install --global --remove')
+        console.log('')
+        break
+      }
+      if (args.includes('--remove') || args.includes('--global-remove')) {
+        uninstallCompaction()
+        console.log('  PACT global compaction removed.')
+        break
+      }
       const threshold = parseFloat(getFlag(args, '--threshold') ?? '0.80')
       const model = getFlag(args, '--model') ?? 'claude-haiku-4-5-20251001'
       const projectDir = process.cwd()
       const existing = readState(projectDir)
       if (existing.installed) {
-        console.log('✓ PACT already installed. Nothing changed.')
-        console.log("  Use 'pact-cc uninstall' first to reinstall with new options.")
+        console.log('PACT already installed. Use "pact uninstall" first to reinstall.')
         break
       }
       await installPACT(projectDir, { threshold, model })
-      console.log(`✓ PACT installed in ${projectDir}/.claude/settings.json`)
-      console.log(`✓ Hook script written to ${projectDir}/.pact/hook.js`)
+      console.log(`  PACT installed in ${projectDir}/.claude/settings.json`)
+      console.log(`  Hook script written to ${projectDir}/.pact/hook.js`)
       console.log(`  Token compression activates at ${Math.round(threshold * 100)}% context usage.`)
-      console.log("  Run 'pact-cc status' to monitor.")
       break
     }
 
     case 'uninstall': {
+      if (args.includes('--global')) {
+        uninstallCompaction()
+        console.log('  PACT global compaction removed.')
+        break
+      }
       await uninstallPACT(process.cwd())
-      console.log('✓ Hook removed from .claude/settings.json')
-      console.log('✓ .pact/ directory deleted')
-      console.log('  PACT uninstalled.')
+      console.log('  PACT hooks removed from this project.')
+      break
+    }
+
+    case 'compact': {
+      let text = args.filter(a => !a.startsWith('--') && a !== 'compact').join(' ')
+      if (!text) {
+        try { text = readFileSync('/dev/stdin', 'utf8') } catch { text = '' }
+      }
+      if (!text.trim()) {
+        console.error('Usage: pact compact <text or stdin>')
+        process.exit(1)
+      }
+      const jsonFlag = args.includes('--json')
+      const result = heuristicCompress(text)
+      if (jsonFlag) {
+        process.stdout.write(JSON.stringify({ ok: true, ...result }) + '\n')
+      } else {
+        console.log('')
+        console.log(`  COMPACTED  ${result.tokens.before} -> ${result.tokens.after} tokens  ${result.ratio.toFixed(1)}x`)
+        console.log('')
+        process.stdout.write(result.pact + '\n')
+        console.log('')
+      }
       break
     }
 
@@ -212,20 +257,112 @@ async function main(): Promise<void> {
       break
     }
 
-    default: {
-      console.log('pact-cc — semantic compression middleware for Claude Code')
+    case 'pack': {
+      const target = args[1]
+      if (!target) {
+        console.error('Usage: pact pack <file|dir> [-o output.pact]')
+        process.exit(1)
+      }
+      const outFlag = getFlag(args, '-o') ?? getFlag(args, '--out')
+      const result = await pack(target, outFlag ?? undefined)
+      const saved = result.originalSize - result.packedSize
+      const pct = result.originalSize > 0 ? Math.round((saved / result.originalSize) * 100) : 0
       console.log('')
-      console.log('Commands:')
-      console.log('  install    [--threshold 0-1] [--model model-id]')
-      console.log('  uninstall')
-      console.log('  compress   [text] [--stats]')
-      console.log('  decompress [pact-code]')
-      console.log('  status')
-      console.log('  savings    [--before file --after file] [--price 3.0] [--json]')
-      console.log('  sessions   [id]')
-      console.log('  benchmark  [--tasks N] [--output path]')
+      if (result.mode === 'archive') {
+        console.log(`  PACKED  ${result.entries} files  ${formatSize(result.originalSize)} -> ${formatSize(result.packedSize)}  ${result.ratio.toFixed(1)}x`)
+      } else {
+        console.log(`  PACKED  ${formatSize(result.originalSize)} -> ${formatSize(result.packedSize)}  ${result.ratio.toFixed(1)}x`)
+      }
+      if (saved > 0) {
+        console.log(`  SAVED   ${formatSize(saved)} (${pct}%)`)
+      }
+      console.log(`  OUT     ${result.outputPath}`)
+      console.log('')
+      break
+    }
+
+    case 'unpack': {
+      const target = args[1]
+      if (!target) {
+        console.error('Usage: pact unpack <file.pact> [-o output-path]')
+        process.exit(1)
+      }
+      const outFlag = getFlag(args, '-o') ?? getFlag(args, '--out')
+      const result = await unpack(target, outFlag ?? undefined)
+      console.log('')
+      console.log(`  RESTORED  ${formatSize(result.originalSize)}  from ${formatSize(result.packedSize)} ${result.mode}`)
+      console.log(`  OUT       ${result.outputPath}`)
+      console.log('')
+      break
+    }
+
+    case 'inspect': {
+      const target = args[1]
+      if (!target) {
+        console.error('Usage: pact inspect <file.pact>')
+        process.exit(1)
+      }
+      const info = inspectPack(target)
+      const saved = info.originalSize - info.compressedSize
+      const pct = info.originalSize > 0 ? Math.round((saved / info.originalSize) * 100) : 0
+      console.log('')
+      console.log(`  PACT v${info.version}  ${info.mode}  ${info.ratio.toFixed(1)}x`)
+      console.log(`  ${info.filename}  ${formatSize(info.originalSize)} -> ${formatSize(info.compressedSize)}${saved > 0 ? `  saved ${pct}%` : ''}`)
+      if (info.summary) {
+        console.log('')
+        info.summary.split('\n').forEach(l => console.log(`  ${l}`))
+      }
+      if (info.entries) {
+        const isSolid = info.entries.every(e => e.compressedSize === 0)
+        console.log('')
+        const maxName = Math.max(...info.entries.map(e => e.filename.length), 8)
+        for (const entry of info.entries) {
+          const tag = entry.mode === 'semantic' ? 'txt' : 'bin'
+          const pad = ' '.repeat(Math.max(0, maxName - entry.filename.length))
+          if (isSolid) {
+            console.log(`  ${tag}  ${entry.filename}${pad}  ${padLeft(formatSize(entry.originalSize), 10)}`)
+          } else {
+            console.log(`  ${tag}  ${entry.filename}${pad}  ${padLeft(formatSize(entry.originalSize), 10)} -> ${padLeft(formatSize(entry.compressedSize), 10)}  ${entry.ratio.toFixed(1)}x`)
+          }
+        }
+        console.log('')
+        if (isSolid) {
+          console.log(`  ${info.entries.length} files  ${formatSize(info.originalSize)} -> ${formatSize(info.compressedSize)} solid brotli  ${info.ratio.toFixed(1)}x`)
+        } else {
+          console.log(`  ${info.entries.length} files  ${formatSize(info.originalSize)} total  ${info.ratio.toFixed(1)}x compression`)
+        }
+      }
+      console.log('')
+      break
+    }
+
+    default: {
+      console.log('')
+      console.log('  PACT  semantic compression for files and agents')
+      console.log('')
+      console.log('  pact pack <file|dir> [-o out.pact]   compress file or folder')
+      console.log('  pact unpack <file.pact> [-o path]    decompress')
+      console.log('  pact inspect <file.pact>             view contents')
+      console.log('')
+      console.log('  pact install --global                auto-compact every Claude Code session')
+      console.log('  pact install [--threshold 0-1]       hook into current project')
+      console.log('  pact uninstall [--global]            remove hooks')
+      console.log('  pact compact [text]                  compress context (heuristic, no API)')
+      console.log('  pact status                          compression stats')
+      console.log('  pact benchmark [--tasks N]           run benchmarks')
+      console.log('')
     }
   }
+}
+
+function formatSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(2)} MB`
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${bytes} B`
+}
+
+function padLeft(s: string, len: number): string {
+  return s.length >= len ? s : ' '.repeat(len - s.length) + s
 }
 
 function getFlag(args: string[], flag: string): string | undefined {

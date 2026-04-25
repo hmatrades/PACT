@@ -22,13 +22,18 @@
     "README.md",
     "LICENSE"
   ],
+  "pkg": {
+    "assets": ["pact-engine.js"],
+    "outputPath": "release"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "test:engine": "node --experimental-vm-modules --test src/engine.test.ts",
     "test": "node --experimental-vm-modules --test src/**/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "benchmark": "node benchmarks/run.mjs"
+    "benchmark": "node benchmarks/run.mjs",
+    "build:binary": "npx @yao-pkg/pkg dist/cli.cjs --target node20-macos-arm64 --output release/pact --no-signature"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0"
