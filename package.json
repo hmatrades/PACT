@@ -28,7 +28,9 @@
     "test:engine": "node --experimental-vm-modules --test src/engine.test.ts",
     "test": "node --experimental-vm-modules --test src/**/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "benchmark": "node benchmarks/run.mjs"
+    "benchmark": "node benchmarks/run.mjs",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0"
@@ -36,7 +38,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsup": "^8.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "wrangler": "^4.85.0"
   },
   "engines": {
     "node": ">=18"
