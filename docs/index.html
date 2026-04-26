@@ -6,6 +6,14 @@
 <title>PACT — Semantic compression that beats ZIP</title>
 <meta name="description" content="PACT: 40% smaller than ZIP on codebases. Semantic inspection without decompressing. Right-click integration with native macOS UI. Also compresses Claude Code sessions 18x better than /compact.">
 <style>
+  @font-face {
+    font-family: 'Blackrush';
+    src: url('Blackrush.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
   *, *::before, *::after { box-sizing: border-box; }
 
   :root {
@@ -26,7 +34,7 @@
     --gradient-h: linear-gradient(90deg, var(--mint), var(--ice));
     --amber: #ffb347;
     --mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
-    --cursive: "Snell Roundhand", "Apple Chancery", "Segoe Script", cursive;
+    --cursive: "Blackrush", "Snell Roundhand", "Apple Chancery", cursive;
   }
 
   html, body {
@@ -454,7 +462,7 @@
 <div class="hero">
   <div class="wrap">
     <h1>PACT</h1>
-    <p class="tagline" style="font-family:var(--cursive);font-size:28px;font-style:italic;letter-spacing:1px">what's the deal with ZIP?</p>
+    <p class="tagline" style="font-family:var(--cursive);font-size:34px;font-style:italic;letter-spacing:2px">what's the deal with ZIP?</p>
     <p class="sub">It's been compressing files the same way since 1989. Thirty-six years. Not one new idea. We made something. It's better. You're welcome.</p>
 
     <div class="stats">
