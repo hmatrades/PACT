@@ -16,26 +16,40 @@ function getPactCommand(): string {
   }
 }
 
+function hasPACTProgress(): boolean {
+  return existsSync(join(homedir(), '.local', 'bin', 'PACTProgress'))
+}
+
 function setupMacOS() {
   log('Platform: macOS')
   log('')
 
   const servicesDir = join(homedir(), 'Library', 'Services')
   const pact = getPactCommand()
+  const useNative = hasPACTProgress()
+
+  if (useNative) {
+    log('Native progress UI: detected')
+  } else {
+    log('Native progress UI: not found (using notifications)')
+    log('To get the animated window: copy PACTProgress to ~/.local/bin/')
+  }
+  log('')
+
+  const packCmd = useNative
+    ? `for f in "$@"; do\n  "$HOME/.local/bin/PACTProgress" pack "$f"\ndone`
+    : `export PATH="$HOME/.local/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"\nfor f in "$@"; do\n  ${pact} pack "$f"\ndone\nosascript -e 'display notification "Packed" with title "PACT"'`
+
+  const unpackCmd = useNative
+    ? `for f in "$@"; do\n  "$HOME/.local/bin/PACTProgress" unpack "$f"\ndone`
+    : `export PATH="$HOME/.local/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"\nfor f in "$@"; do\n  ${pact} unpack "$f"\ndone\nosascript -e 'display notification "Unpacked" with title "PACT"'`
+
+  const inspectCmd = `export PATH="$HOME/.local/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"\nfor f in "$@"; do\n  ${pact} inspect "$f" | open -f\ndone`
 
   const workflows: Array<{ name: string; cmd: string }> = [
-    {
-      name: 'Pack with PACT',
-      cmd: `export PATH="$HOME/.local/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"\nfor f in "$@"; do\n  ${pact} pack "$f"\ndone\nosascript -e 'display notification "Packed" with title "PACT"'`,
-    },
-    {
-      name: 'Unpack PACT',
-      cmd: `export PATH="$HOME/.local/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"\nfor f in "$@"; do\n  ${pact} unpack "$f"\ndone\nosascript -e 'display notification "Unpacked" with title "PACT"'`,
-    },
-    {
-      name: 'Inspect PACT',
-      cmd: `export PATH="$HOME/.local/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"\nfor f in "$@"; do\n  ${pact} inspect "$f" | open -f\ndone`,
-    },
+    { name: 'Pack with PACT', cmd: packCmd },
+    { name: 'Unpack PACT', cmd: unpackCmd },
+    { name: 'Inspect PACT', cmd: inspectCmd },
   ]
 
   for (const wf of workflows) {
