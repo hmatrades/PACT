@@ -26,13 +26,14 @@
     --gradient-h: linear-gradient(90deg, var(--mint), var(--ice));
     --amber: #ffb347;
     --mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+    --cursive: "Snell Roundhand", "Apple Chancery", "Segoe Script", cursive;
   }
 
   html, body {
     margin: 0; padding: 0;
     background: var(--bg);
     color: var(--fg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Helvetica, Arial, sans-serif;
     font-size: 16px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
@@ -41,6 +42,22 @@
   a { color: var(--accent); text-decoration: none; }
   a:hover { text-decoration: underline; }
   code { font-family: var(--mono); font-size: 0.9em; color: var(--accent); }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(0,221,179,0.1); }
+    50% { box-shadow: 0 0 40px rgba(0,221,179,0.25); }
+  }
+  .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
 
   .wrap { max-width: 900px; margin: 0 auto; padding: 0 28px; }
 
@@ -67,10 +84,12 @@
     margin: 0;
     letter-spacing: 8px;
     font-family: var(--mono);
-    background: var(--gradient);
+    background: linear-gradient(90deg, var(--mint), var(--ice), var(--mint), var(--ice));
+    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    animation: shimmer 4s linear infinite;
   }
   .hero .tagline {
     font-size: 22px;
@@ -435,7 +454,7 @@
 <div class="hero">
   <div class="wrap">
     <h1>PACT</h1>
-    <p class="tagline">ZIP's bigger brother.</p>
+    <p class="tagline" style="font-family:var(--cursive);font-size:28px;font-style:italic;letter-spacing:1px">ZIP's bigger brother.</p>
     <p class="sub">ZIP is 36 years old. It deserves to retire. We built its replacement in 5 days.</p>
 
     <div class="stats">
@@ -816,10 +835,22 @@ Files on disk
   </div>
 </section>
 
+<!-- ─── SUPPORT ─── -->
+<section style="border-top:1px solid var(--border);padding:64px 0;text-align:center">
+  <div class="wrap">
+    <h2 style="text-align:center">Fuel the compactor</h2>
+    <p style="color:var(--fg-muted);max-width:480px;margin:0 auto 28px;font-size:15px">Built in 5 days on API credits. Every sat goes to compute — more benchmarks, more platforms, more compression research.</p>
+    <img src="wallet-qr.png" alt="Wallet QR" style="width:220px;height:220px;border-radius:12px;margin:0 auto;display:block;image-rendering:auto;animation:pulseGlow 3s ease-in-out infinite"/>
+    <p style="color:var(--fg-muted);font-family:var(--mono);font-size:13px;margin-top:16px;user-select:all;cursor:text">0xeC68...370b</p>
+    <p style="color:var(--fg-dim);font-size:11px;margin-top:4px">ETH / Base / any EVM chain</p>
+  </div>
+</section>
+
 <footer>
   <div class="wrap">
     <div class="links">
       <a href="https://github.com/hmatrades/PACT">GitHub</a>
+      <a href="https://pact.zip">pact.zip</a>
       <span style="color:var(--fg-dim)">Built with Claude Code</span>
       <span style="color:var(--fg-dim)">PolyForm Noncommercial 1.0.0</span>
     </div>
@@ -827,5 +858,40 @@ Files on disk
   </div>
 </footer>
 
+<script>
+// Scroll fade-in
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+}, { threshold: 0.15 });
+document.querySelectorAll('section, .card, .claude-card, .stat').forEach(el => {
+  el.classList.add('fade-in');
+  obs.observe(el);
+});
+
+// Counter animation for hero stats
+function animateCounter(el, target, suffix, duration) {
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    const val = (target * ease);
+    if (target === Math.floor(target)) el.textContent = Math.floor(val) + suffix;
+    else el.textContent = val.toFixed(1) + suffix;
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+const statObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target;
+    const text = el.textContent;
+    if (text.includes('%')) animateCounter(el, parseFloat(text), '%', 1500);
+    else if (text.includes('x')) animateCounter(el, parseFloat(text), 'x', 1500);
+    statObs.unobserve(el);
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('.stat .num').forEach(el => statObs.observe(el));
+</script>
 </body>
 </html>
