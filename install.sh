@@ -4,10 +4,10 @@
 set -e
 
 echo ""
-echo "  ╔═══════════════════════════════╗"
-echo "  ║   PACT installer              ║"
-echo "  ║   ZIP's bigger brother.       ║"
-echo "  ╚═══════════════════════════════╝"
+echo "  ╔═════════════════════════════════════════╗"
+echo "  ║   PACT installer                        ║"
+echo "  ║   compression that went to college.     ║"
+echo "  ╚═════════════════════════════════════════╝"
 echo ""
 
 # Detect OS and architecture

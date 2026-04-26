@@ -246,7 +246,7 @@ export async function runSetup() {
   console.log('')
   console.log('  ╔═══════════════════════════════════╗')
   console.log('  ║   PACT setup                      ║')
-  console.log('  ║   ZIP\'s bigger brother.            ║')
+  console.log('  ║   compression that went to college. ║')
   console.log('  ╚═══════════════════════════════════╝')
   console.log('')
 
