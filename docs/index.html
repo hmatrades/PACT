@@ -480,10 +480,10 @@
 <section style="border-top:none;padding:48px 0 56px">
   <div class="wrap">
     <div style="max-width:680px;margin:0 auto;text-align:center">
-      <p style="color:var(--fg);font-size:17px;line-height:1.7;margin:0 0 20px">You're four hours into a refactor. Claude knows everything &mdash; your constraints, your plan, which files are done, which are broken. Then the context window fills up and Claude gets amnesia. <span style="color:var(--accent);font-weight:600">Cool.</span></p>
-      <p style="color:var(--fg-muted);font-size:15px;line-height:1.7;margin:0 0 20px">Your options? Summarize and watch the model forget which files it already fixed. Or keep everything and pay for 200K tokens every time it reads a file. Both options suck. You know it. We know it. Anthropic probably knows it too.</p>
-      <p style="color:var(--fg-muted);font-size:15px;line-height:1.7;margin:0 0 20px">Meanwhile ZIP &mdash; the compression format older than most developers using Claude Code &mdash; is still compressing each file by itself like it's 1989. It doesn't know your 15 TypeScript files all start with the same imports. It doesn't know anything. It literally cannot read.</p>
-      <p style="color:var(--fg);font-size:17px;line-height:1.7;margin:0"><span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:600">So we taught compression to read.</span></p>
+      <p style="color:var(--fg);font-size:17px;line-height:1.7;margin:0 0 20px">You ever watch someone refactor for four hours, and then Claude just... forgets? Like you just explained the whole plan, touched 30 files, and now it's looking at you like you're a stranger at a party. <span style="color:var(--accent);font-weight:600">"What files did we change?" Brother, ALL of them.</span></p>
+      <p style="color:var(--fg-muted);font-size:15px;line-height:1.7;margin:0 0 20px">So your choices are: summarize and pray, or carry 200K tokens around like a guy who brings his own chair to a restaurant. Both of these are embarrassing and I refuse to participate.</p>
+      <p style="color:var(--fg-muted);font-size:15px;line-height:1.7;margin:0 0 20px">And ZIP? ZIP's been doing the same thing since George H.W. Bush was president. It compresses each file by itself. Doesn't look at the other files. Doesn't care. ZIP is the guy at the group project who does his slide and leaves the call.</p>
+      <p style="color:var(--fg);font-size:17px;line-height:1.7;margin:0"><span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:600">So we taught compression to read. Revolutionary, I know.</span></p>
     </div>
   </div>
 </section>
@@ -491,8 +491,8 @@
 <!-- ─── VS ZIP ─── -->
 <section id="vs-zip">
   <div class="wrap">
-    <h2>Receipts</h2>
-    <p style="color:var(--fg-muted);margin:0 0 8px">79-file real project. We didn't cherry-pick this. It's the PACT repo compressing itself.</p>
+    <h2>Anyway here's the actual data</h2>
+    <p style="color:var(--fg-muted);margin:0 0 8px">Ok jokes aside. 79-file real project. Reproducible. This is the PACT repo compressing itself. We didn't even pick a good example, this IS the example.</p>
 
     <div class="bar-chart">
       <div class="bar-row">
@@ -511,18 +511,18 @@
       </div>
     </div>
 
-    <p style="color:var(--fg-muted);font-size:14px;margin-top:24px">ZIP compresses each file alone like a sociopath. PACT concatenates them into one stream &mdash; brotli sees the shared imports across all 79 files and goes "oh, I only need to store that once." Wild concept, apparently.</p>
+    <p style="color:var(--fg-muted);font-size:14px;margin-top:24px">The technical explanation is straightforward: PACT uses brotli solid archiving &mdash; all files concatenated into a single compression stream. Cross-file patterns (shared import headers, structural boilerplate, repeated identifiers) are deduplicated at the algorithm level. ZIP's per-file deflate cannot observe inter-file redundancy. The delta is architectural, not heuristic.</p>
 
     <div class="cards" style="margin-top:32px">
       <div class="card">
         <div class="highlight">4.5x</div>
         <h3>Compression ratio</h3>
-        <p>1 MB down to 221 KB. We sort files by extension before concatenating so similar files sit next to each other. Brotli's window sees the pattern. ZIP could never.</p>
+        <p>1,001 KB reduced to 221 KB. Files are sorted by extension prior to concatenation, maximizing sliding window utilization across structurally similar content. Brotli quality 11 with solid stream encoding.</p>
       </div>
       <div class="card">
         <div class="highlight" style="color:var(--blue)">0</div>
         <h3>Dependencies</h3>
-        <p>Zero. Brotli ships with Node.js. We didn't npm install a single compression library. The entire engine is 250 lines of TypeScript. That's it. That's the tweet.</p>
+        <p>Zero external dependencies. Brotli is provided by Node.js core (<code>node:zlib</code>). The compression engine is 250 lines of TypeScript with no native addons or WASM. Entire surface area is auditable in one sitting.</p>
       </div>
     </div>
   </div>
@@ -531,8 +531,8 @@
 <!-- ─── INSPECT ─── -->
 <section id="inspect">
   <div class="wrap">
-    <h2>X-ray vision</h2>
-    <p style="color:var(--fg-muted);margin:0 0 24px"><code>unzip -l</code> gives you filenames. <code>pact inspect</code> tells you what the code actually does. Without decompressing. Because we're not animals.</p>
+    <h2>Ok but watch this part</h2>
+    <p style="color:var(--fg-muted);margin:0 0 24px"><code>unzip -l</code> gives you filenames like a valet handing you someone else's keys. <code>pact inspect</code> tells you every function, every import, every class &mdash; without decompressing. It's like having x-ray vision except it's useful and you don't get arrested.</p>
 
     <pre><span class="comment">$ pact inspect src.pact</span>
 
@@ -576,7 +576,7 @@
 <span class="output">  Pack with PACT
   Unpack PACT
   Inspect PACT</span></pre>
-        <p style="font-size:13px;color:var(--fg-muted);margin-top:12px">200KB native Swift binary. Not Electron. We have standards.</p>
+        <p style="font-size:13px;color:var(--fg-muted);margin-top:12px">200KB native Swift binary. Not Electron. We don't need 300MB of Chromium to show you a progress bar. We have self-respect.</p>
       </div>
     </div>
   </div>
@@ -594,14 +594,14 @@
         Claude Code Plugin
       </div>
       <h3>PACT for Claude Code</h3>
-      <p>Your /compact is doing its best. PACT does it better. No hard feelings.</p>
+      <p>Look, /compact tries really hard. It's like watching your little cousin play basketball. Supportive energy. But someone has to say it.</p>
     </div>
   </div>
 
   <section id="vs-compact">
     <div class="wrap">
       <h2>PACT vs /compact</h2>
-      <p style="color:#7A6A5A;margin:0 0 8px;font-size:14px">12 real Claude Code sessions. Not synthetic. Not "up to." Run it yourself and argue with the terminal.</p>
+      <p style="color:#7A6A5A;margin:0 0 8px;font-size:14px">12 real Claude Code sessions. Measured, not estimated. Reproducible on any machine with Node.js. The following data is not a suggestion, it's a receipt.</p>
       <pre style="background:#1a1714;border-color:rgba(0,0,0,0.12);margin:0 0 28px;font-size:13px;color:#F0E0D0"><span style="color:#7A6A5A">$ </span><span style="color:#D4956A">node benchmarks/compaction-benchmark.mjs</span></pre>
 
       <table class="claude-table">
@@ -710,7 +710,7 @@
 // file status? unknown
 // constraints? unknown
 // what's left to do? unknown</span></pre>
-          <p style="margin-top:12px">A vibe-based summary. The AI knows something happened. It just doesn't know what. Ask it "what files have we touched?" and watch it hallucinate.</p>
+          <p style="margin-top:12px">A LinkedIn post about your codebase. The AI knows something happened — vibes were had, code was written, someone said "refactor." Ask it which files are done and it'll give you the confidence of a guy who definitely didn't study but is absolutely going to wing it.</p>
         </div>
         <div class="claude-card" style="border-color:rgba(212,149,106,0.35)">
           <h3>PACT gives the AI this</h3>
@@ -729,7 +729,7 @@
  }
 }
 . sjson(session)</pre>
-          <p style="margin-top:12px">Structured state. The AI can answer any question about the session because the answer is literally in the data. Not vibes. Data.</p>
+          <p style="margin-top:12px">An actual data structure. Goal, files with status codes, plan steps, constraints, entities &mdash; all addressable, all queryable, all correct. The AI doesn't need to guess because guessing is for /compact users.</p>
         </div>
       </div>
     </div>
@@ -756,12 +756,12 @@
         <div class="claude-card">
           <div class="highlight" style="color:#D4956A">0</div>
           <h3>API calls required</h3>
-          <p>None. Regex-based heuristic extraction. We're not going to charge you to compress your own context. That would be unhinged.</p>
+          <p>None. Zero. Nada. It's regex-based heuristic extraction running locally. Charging you an API call to compress your own context would be like charging you to fold your own laundry. We thought about it for zero seconds.</p>
         </div>
         <div class="claude-card">
           <div class="highlight" style="color:#D4956A">50%</div>
           <h3>Context threshold</h3>
-          <p>Fires at 50%. Silently. The model doesn't even notice. No /compact, no interruption, no "please summarize the conversation so far." Just vibes. Structural vibes.</p>
+          <p>Fires at 50% context usage. The model doesn't notice. You don't notice. Nobody gets interrupted. Nobody types /compact like an animal. It just happens. Compression that respects your time. Imagine.</p>
         </div>
       </div>
     </div>
@@ -805,7 +805,7 @@ Files on disk
     <div style="text-align:center;margin-bottom:40px">
       <div style="font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--fg-dim);margin-bottom:12px">Task 012</div>
       <h3 style="font-size:36px;font-weight:800;margin:0 0 16px;font-family:var(--mono);color:var(--green);letter-spacing:2px">BARUTU SNAKE</h3>
-      <p style="color:var(--fg-muted);font-size:16px;max-width:600px;margin:0 auto;line-height:1.6">PACT compressed the Claude Code session that built PACT. The tool ate its own creation story and came out 34x lighter. Darwin revived his own binary. We don't know what to do with this information either.</p>
+      <p style="color:var(--fg-muted);font-size:16px;max-width:600px;margin:0 auto;line-height:1.6">PACT compressed the Claude Code session that built PACT. The tool ate its own birth certificate and came out 34x lighter. This is either genius or a cry for help. We honestly can't tell anymore and at this point we're too afraid to ask.</p>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:32px">
@@ -830,7 +830,7 @@ Files on disk
     <div style="text-align:center">
       <pre style="display:inline-block;text-align:left;font-size:13px;padding:16px 24px"><span class="comment"># reproduce it. right now. on your machine.</span>
 <span class="cmd">node benchmarks/run.mjs --tasks 012-barutu-snake</span></pre>
-      <p style="color:var(--fg-dim);font-size:13px;font-family:var(--mono);margin-top:12px">no asterisks. no "up to." no "in ideal conditions." run it. argue with the output. we'll wait.</p>
+      <p style="color:var(--fg-dim);font-size:13px;font-family:var(--mono);margin-top:12px">no asterisks. no "up to." no "in ideal conditions." no "results may vary." run it. we'll wait. bring snacks.</p>
     </div>
   </div>
 </section>
