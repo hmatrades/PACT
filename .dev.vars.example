@@ -1,0 +1,9 @@
+# Cloudflare Workers local development secrets
+# Copy this file to .dev.vars and fill in real values.
+# .dev.vars is gitignored — never commit real secrets.
+
+# Example: Anthropic API key if used server-side in a Worker
+# ANTHROPIC_API_KEY=sk-ant-...
+
+# Example: any other environment-specific secrets
+# MY_SECRET=
