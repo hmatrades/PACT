@@ -25,7 +25,10 @@ __pycache__/
 .env.local
 
 # Local Claude Code session artifacts — not for public consumption
-.claude/
+# (settings.json/local stay private; slash commands ship publicly so judges/users
+#  get /pact and /pact-rehydrate the moment they clone the repo)
+.claude/*
+!.claude/commands/
 
 # Hackathon prep / scratch — private working docs with old claims + judge prep
 meta/
