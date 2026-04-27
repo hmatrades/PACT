@@ -13,7 +13,7 @@ That's the whole demo. Everything below this line is receipts.
 
 ---
 
-**Category:** Built with Claude Code · **Submitter:** Aiden Hecker · **Repo:** github.com/hmatrades/PACT · **npm:** npmjs.com/package/pact-cc
+**Category:** Built with Claude Code · **Submitter:** Aiden Hecker · **Repo:** github.com/hmatrades/PACT
 
 ---
 
@@ -35,7 +35,6 @@ PACT solves both with one engine: structural lossless extraction, then determini
 
 ```bash
 node benchmarks/run.mjs                # heuristic mode, no API key
-pact-cc benchmark --real               # real Haiku call
 node benchmarks/run.mjs --tasks 012-barutu-snake
 ```
 
@@ -79,13 +78,10 @@ Every test: lossless round-trip verified with `diff -r`.
 Three modes coexist. Pick whichever fits the workflow.
 
 ```bash
-# Mode A — file compression (CLI)
+# Mode A — file compression (CLI, after macOS install)
 pact pack myproject/                    # creates myproject.pact
 pact unpack myproject.pact              # bit-perfect restore
 pact inspect myproject.pact             # see contents without decompressing
-
-# Mode B — npm hook (auto-trigger via PreToolUse, Haiku-driven extraction)
-npx pact-cc install                     # compression fires at 60% context
 
 # Mode C — pure Claude Code (zero install, Opus 4.7 self-compresses)
 git clone https://github.com/hmatrades/PACT && cd PACT && claude
@@ -97,7 +93,7 @@ git clone https://github.com/hmatrades/PACT && cd PACT && claude
 bash installers/macos/install.sh        # right-click any file: Pack/Unpack/Inspect
 ```
 
-Mode C is what runs the moment you clone the repo. No npm. No binary. No API key. No second model call.
+Mode C is what runs the moment you clone the repo. No npm. No binary. No API key. No second model call. (The npm path — Mode B — runs the same canonical encoder via a `PreToolUse` Haiku worker; described in Architecture below. Code is in the repo, package not yet published to npm.)
 
 ---
 
@@ -221,7 +217,7 @@ src/
   hook.ts                Mode B — PreToolUse hook handler
   install.ts             Mode B — install/uninstall/status
   cli.ts                 pact-cc CLI
-  engine.test.ts         140+ PACT engine tests
+  engine.test.ts         132 PACT engine tests
 .claude/commands/
   pact.md                Mode C — /pact slash command (Opus 4.7 self-compresses)
   pact-rehydrate.md      Mode C — /pact-rehydrate slash command
@@ -243,7 +239,7 @@ docs/
 
 The build is the proof of concept. Every line written in Claude Code sessions, several of them compressed by PACT itself during development. Task 012 in the benchmark suite — BARUTU SNAKE — is the conversation that built PACT, compressed by PACT, 34.3× lossless. The receipt is in the commit history.
 
-Five days, one repo, four compression modes, 140+ engine tests, 12-task benchmark suite, native macOS integration, two slash commands, one landing page, one demo video. No team. Just Claude Code and Opus 4.7.
+Five days, one repo, four compression modes, 132 engine tests, 12-task benchmark suite, native macOS integration, two slash commands, one landing page, one demo video. No team. Just Claude Code and Opus 4.7.
 
 ---
 
