@@ -2,7 +2,7 @@
 
 **Semantic compression that beats ZIP by 40% on codebases.**
 
-[**pact.zip**](http://pact.zip) · [Demo video](./PACT_demo.mp4) · [Explainer](./pact-explainer.mp4)
+[**pact-six-kappa.vercel.app**](https://pact-six-kappa.vercel.app) · [Demo video](./PACT_demo.mp4) · [Explainer](./pact-explainer.mp4)
 
 https://github.com/hmatrades/PACT/raw/main/PACT_demo.mp4
 
