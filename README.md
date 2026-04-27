@@ -2,6 +2,12 @@
 
 **Semantic compression that beats ZIP by 40% on codebases.**
 
+[**pact.zip**](http://pact.zip) · [Demo video](./PACT_demo.mp4) · [Explainer](./pact-explainer.mp4)
+
+https://github.com/hmatrades/PACT/raw/main/PACT_demo.mp4
+
+---
+
 ```bash
 npx pact-cc setup     # one command. right-click + Claude Code compaction. done.
 ```
@@ -75,6 +81,13 @@ pact compact [text]                  compress context (no API)
 pact --version                       version
 ```
 
+## Demo videos
+
+| Video | Description |
+|-------|-------------|
+| [`PACT_demo.mp4`](./PACT_demo.mp4) | Full demo — `pact pack`, `pact inspect`, `pact unpack`, right-click integration, `/pact` slash command |
+| [`pact-explainer.mp4`](./pact-explainer.mp4) | Animated explainer — what PACT does and why it beats ZIP |
+
 ## Development
 
 ```bash
@@ -84,6 +97,21 @@ npm test               # 150 tests (vitest)
 npm run build:binary   # standalone macOS binary
 ```
 
+## Architecture
+
+```
+Files on disk
+  → collect + sort by extension (similar files adjacent)
+  → extract semantic summary per text file (functions, imports, types)
+  → concatenate raw bytes into single buffer
+  → brotli quality 11 (solid stream — sees patterns across all files)
+  → .pact container
+       PACT magic + version + manifest (uncompressed) + payload
+```
+
+The manifest stores per-file metadata and semantic summaries uncompressed —
+`pact inspect` reads the manifest without touching the brotli stream.
+
 ## License
 
 **PolyForm Noncommercial 1.0.0** — source-available, noncommercial use only.
@@ -91,4 +119,4 @@ Commercial license: **heckeraiden@gmail.com**
 
 ---
 
-**[pact.zip](http://pact.zip)** · Built with Claude Code
+**[pact.zip](http://pact.zip)** · Built with Claude Code · 150 tests passing
